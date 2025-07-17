@@ -1,0 +1,17 @@
+[
+    {
+      "name": "Health Checks",
+      "repo": "https://github.com/php-ef/plugin-healthchecks",
+      "author": "TehMuffinMoo",
+      "category": "Monitoring",
+      "description": "A PHP-EF Plugin for integrated Health Checks & Reporting",
+      "icon": "https://raw.githubusercontent.com/php-ef/plugin-healthchecks/main/logo.png",
+      "contact": "https://github.com/php-ef/plugin-healthchecks/issues",
+      "link": "https://github.com/php-ef/plugin-healthchecks",
+      "version": "0.0.1",
+      "minimum_php-ef_version": "0.8.7",
+      "release_date": "2025-07-17",
+      "last_updated": "2025-07-17",
+      "github_folder": ""
+    }
+]
