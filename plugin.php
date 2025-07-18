@@ -104,6 +104,11 @@ class healthChecksPlugin extends phpef {
                 'dataAttributes' => ['sortable' => 'true'],
 			],
 			[
+				'field' => 'schedule',
+				'title' => 'Schedule',
+                'dataAttributes' => ['sortable' => 'true', 'visible' => 'false'],
+			],
+			[
 				'field' => 'enabled',
 				'title' => 'Enabled',
                 'dataAttributes' => ['sortable' => 'true', 'formatter' => 'booleanTickCrossFormatter'],
