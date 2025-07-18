@@ -53,48 +53,68 @@ class HealthChecksWidget implements WidgetInterface {
 
                 <!-- Use queryAPI to fetch health check data and create the widget content -->
                 <script>
-                queryAPI('GET','/api/plugin/healthchecks/enabled_services').done(function(data) {
-                    if (data.data && data.data.length > 0) {
-                        data.data.forEach(function(service) {
-                            let serviceStatus = service.status || 'unknown';
-                            let serviceName = service.name || 'Unknown Service';
-                            let serviceType = service.type || 'unknown';
-                            let serviceHost = service.host || 'unknown';
-                            let servicePort = service.port || 'unknown';
-                            let serviceProtocol = service.protocol || 'http';
-                            let servicePath = service.http_path || '/';
-                            let serviceExpectedStatus = service.http_expected_status || 200;
-                            let healthClass = (serviceStatus === 'healthy') ? 'text-success' : (serviceStatus === 'unhealthy') ? 'text-danger' : 'text-warning';
+                function loadHealthData() {
+                    queryAPI('GET','/api/plugin/healthchecks/enabled_services').done(function(data) {
+                        $('#healthChecks-collapse').html('');
+                        if (data.data && data.data.length > 0) {
+                            data.data.forEach(function(service) {
+                                let serviceStatus = service.status || 'unknown';
+                                let serviceName = service.name || 'Unknown Service';
+                                let serviceType = service.type || 'unknown';
+                                let serviceHost = service.host || 'unknown';
+                                let servicePort = service.port || 'unknown';
+                                let serviceLastChecked = service.last_checked || 'unknown';
+                                let serviceProtocol = service.protocol || 'http';
+                                let servicePath = service.http_path || '/';
+                                let serviceExpectedStatus = service.http_expected_status || 200;
+                                let healthClass = (serviceStatus === 'healthy') ? 'success' : (serviceStatus === 'unhealthy') ? 'danger' : 'warning';
 
-                            // Group healthchecks into rows of 3
-                            if ($('#healthChecks-collapse .row').length === 0 || $('#healthChecks-collapse .row:last-child .col-xl-4').length >= 3) {
-                                $('#healthChecks-collapse').append('<div class="row pb-2"></div>');
-                            }
-                            $('#healthChecks-collapse .row:last-child').append(`
-                                <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                                    <div class="card card-rounded bg-inverse mb-lg-0 mb-2 monitorr-card">
-                                        <div class="card-body pt-1 pb-1">
-                                            <div class="d-flex no-block align-items-center">
-                                                <div class="left-health bg-info"></div>
-                                                <div class="ms-1 w-100 d-flex">
-                                                    <i class="float-right mt-2 mb-2 me-2 fa fa-check-circle h3 \${healthClass}"></i>
-                                                    <h4 class="d-flex no-block align-items-center mt-2 mb-2">\${serviceName}</h4>
-                                                    <div class="clearfix"></div>
+                                // Group healthchecks into rows of 3
+                                if ($('#healthChecks-collapse .row').length === 0 || $('#healthChecks-collapse .row:last-child .col-xl-4').length >= 3) {
+                                    $('#healthChecks-collapse').append('<div class="row pb-2"></div>');
+                                }
+                                $('#healthChecks-collapse .row:last-child').append(`
+                                    <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-xs-12">
+                                        <div class="card card-rounded bg-inverse mb-lg-0 mb-2 monitorr-card">
+                                            <div class="card-body pt-1 pb-1">
+                                                <div class="d-flex no-block align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="left-health bg-info"></div>
+                                                        <div class="ms-1 w-100 d-flex">
+                                                            <i class="float-right mt-2 mb-2 me-2 fa fa-check-circle h3 text-\${healthClass}"></i>
+                                                            <h4 class="d-flex no-block align-items-center mt-2 mb-2">\${serviceName}</h4>
+                                                            <div class="clearfix"></div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- <span class="badge text-bg-\${healthClass} float-end">Last checked: \${serviceLastChecked}</span> -->
+                                                    <small class="text-muted me-2">
+                                                        Last checked: \${serviceLastChecked}
+                                                    </small>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            `);
+                                `);
+                            });
+                        } else {
+                            $('#healthChecks-collapse').append('<p>No health checks available.</p>');
+                        }
+                    })
+                }
 
-                        });
-                    } else {
-                        $('#healthChecks-collapse').append('<p>No health checks available.</p>');
+                async function refreshHealthData() {
+                    const delay = ms => new Promise(res => setTimeout(res, ms));
+                    try {
+                        while (true) {
+                            loadHealthData();
+                            await delay(30000);
+                        }
+                    } catch (err) {
+                        console.log(err);
                     }
-                })
+                }
 
-
-
+                refreshHealthData();
                 </script>
                 EOF;
             }

@@ -174,8 +174,8 @@ trait HealthChecksDatabase {
             ':port' => $data['port'] ?? null,
             ':protocol' => $data['protocol'] ?? null,
             ':http_path' => $data['http_path'] ?? null,
-            ':timeout' => $data['timeout'] ?? 5,
-            ':schedule' => $data['schedule'] ?? '*/5 * * * *',
+            ':timeout' => $data['timeout'] ?: 5,
+            ':schedule' => $data['schedule'] ?: '*/5 * * * *',
             ':http_expected_status' => $data['http_expected_status'] ?? null,
             ':verify_ssl' => $data['verify_ssl'] ?? 0
         ]);
@@ -210,8 +210,8 @@ trait HealthChecksDatabase {
             ':port' => $data['port'] ?? null,
             ':protocol' => $data['protocol'] ?? null,
             ':http_path' => $data['http_path'] ?? null,
-            ':timeout' => $data['timeout'] ?? 5,
-            ':schedule' => $data['schedule'] ?? '*/5 * * * *',
+            ':timeout' => $data['timeout'] ?: 5,
+            ':schedule' => $data['schedule'] ?: '*/5 * * * *',
             ':http_expected_status' => $data['http_expected_status'] ?? null,
             ':verify_ssl' => $data['verify_ssl'] ?? 0,
         ]);

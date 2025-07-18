@@ -68,7 +68,7 @@ trait HealthChecksServiceChecker {
             'status' => $httpCode == $service['http_expected_status'] ? 'healthy' : 'unhealthy',
             'http_code' => $httpCode,
             'path' => $service['http_path'] ?? '/',
-            'protocol' => $service['protocol'] ?? 'http',
+            'protocol' => $service['protocol'] ?: 'http',
             'response_time' => $responseTime,
             'response' => $response,
             'status_message' => $httpCode == $service['http_expected_status'] ? 'Service is healthy' : 'Service is unhealthy',

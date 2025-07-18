@@ -104,6 +104,11 @@ class healthChecksPlugin extends phpef {
                 'dataAttributes' => ['sortable' => 'true'],
 			],
 			[
+				'field' => 'schedule',
+				'title' => 'Schedule',
+                'dataAttributes' => ['sortable' => 'true', 'visible' => 'false'],
+			],
+			[
 				'field' => 'enabled',
 				'title' => 'Enabled',
                 'dataAttributes' => ['sortable' => 'true', 'formatter' => 'booleanTickCrossFormatter'],
@@ -328,9 +333,9 @@ class healthChecksPlugin extends phpef {
 										toast("Test Failed", row.name, data["data"]["error"], "danger","30000");
 									} else {
 										if (data["data"]["type"] == "web") {
-											toast("Test Failed", row.name, "HTTP Status Code: " + data["data"]["http_code"] + " - <b>Expected:</b> " + row.http_expected_status + "\n\n<b>Response: </b> " + data["data"]["response"], "danger","30000");
+											toast("Test Failed", row.name, "HTTP Status Code: " + data["data"]["http_code"] + " - <b>Expected:</b> " + row.http_expected_status + "\n\n<b>Response: </b> " + escapeHTML(data["data"]["response"]), "danger","30000");
 										} else {
-											toast("Test Failed", row.name, data["data"]["response"], "danger","30000");
+											toast("Test Failed", row.name, escapeHTML(data["data"]["response"]), "danger","30000");
 										}
 									}
 								}
