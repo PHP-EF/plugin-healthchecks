@@ -13,17 +13,6 @@ $app->get('/plugin/healthchecks/settings', function ($request, $response, $args)
 		->withStatus($GLOBALS['responseCode']);
 });
 
-$app->get('/plugin/healthchecks/settings/services', function ($request, $response, $args) {
-	$healthChecksPlugin = new healthChecksPlugin();
-	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-WRITE'] ?? 'ACL-WRITE')) {
-		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->_pluginGetServicesSettings());
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-
 $app->get('/plugin/healthchecks/enabled_services', function ($request, $response, $args) {
 	$healthChecksPlugin = new healthChecksPlugin();
 	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-READ'] ?? 'ACL-READ')) {

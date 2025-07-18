@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.0.2', // SemVer of plugin
+	'version' => '0.0.3', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -363,40 +363,13 @@ class healthChecksPlugin extends phpef {
 			),
 			'Health Checks' => array(
 				$this->settingsOption('bootstrap-table', 'HealthChecksTable', ['id' => 'HealthChecksTable', 'columns' => $HealthChecksTableColumns, 'dataAttributes' => $HealthChecksTableAttributes, 'width' => '12']),
-			)
-		);
-	}
-
-public function _pluginGetServicesSettings() {
-
-        $AppendNone = array(
-            [
-                "name" => 'None',
-                "value" => ''
-            ]
-        );
-
-		return array(
-			'Health Checks' => array(
-				$this->settingsOption('input', 'id', ['label' => 'Service ID', 'attr' => 'hidden']),
-				$this->settingsOption('input', 'name', ['label' => 'Service Name', 'placeholder' => 'My Service']),
-				$this->settingsOption('select', 'type', ['label' => 'Service Type', 'options' => [
-					['name' => 'Web (HTTP/S)', 'value' => 'web'],
-					['name' => 'TCP', 'value' => 'tcp'],
-					['name' => 'ICMP (Ping)', 'value' => 'icmp']
-				]]),
-				$this->settingsOption('input', 'host', ['label' => 'FQDN / IP', 'placeholder' => 'app.example.com']),
-				$this->settingsOption('input', 'port', ['label' => 'Port', 'placeholder' => '80']),
-				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [
-					['name' => 'HTTP', 'value' => 'http'],
-					['name' => 'HTTPS', 'value' => 'https']
-				], 'default' => 'http']),
-				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'Path to check, e.g. /status']),
-				$this->settingsOption('input', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'default' => '200']),
-				$this->settingsOption('checkbox', 'verify_ssl', ['label' => 'Verify SSL/TLS', 'default' => true, 'help' => 'Enable SSL/TLS verification']),
-				$this->settingsOption('input', 'timeout', ['label' => 'Timeout (seconds)', 'placeholder' => '15', 'default' => '15']),
-				$this->settingsOption('input', 'schedule', ['label' => 'Schedule (Cron Format)', 'placeholder' => '*/5 * * * *', 'default' => '*/5 * * * * *']),
-				$this->settingsOption('checkbox', 'enabled', ['label' => 'Enabled', 'default' => true, 'help' => 'Enable this service for health checks'])
+			),
+			'Notifications' => array(
+				$this->settingsOption('checkbox', 'smtpEnable', ['label' => 'Enable SMTP Notifications', 'help' => 'Enable to send email notifications for service status changes.']),
+				$this->settingsOption('checkbox', 'sendOnce', ['label' => 'Only send notifications once', 'help' => 'For each service state change, only send each notification type once.']),
+				$this->settingsOption('input', 'smtpName', ['label' => 'From Name', 'help' => 'The name displayed that notifications will be sent from. This will default to the globally configured SMTP From Name if not set.', 'placeholder' => $this->config->get('SMTP', 'from_name') ?? '']),
+				$this->settingsOption('input', 'smtpFrom', ['label' => 'From Address', 'help' => 'The email address that notifications will be sent from. This will default to the globally configured SMTP From Address if not set.', 'placeholder' => $this->config->get('SMTP', 'from_email') ?? '']),
+				$this->settingsOption('input', 'smtpTo', ['label' => 'To Address', 'help' => 'The email address that notifications will be sent to. This will default to the globally configured SMTP To Address if not set.', 'placeholder' => $this->config->get('SMTP', 'to_email') ?? '']),
 			)
 		);
 	}

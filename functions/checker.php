@@ -78,6 +78,13 @@ trait HealthChecksServiceChecker {
             'error_code_string' => $errorCodeString,
         ];
 
+        if ($Result['status'] == 'unhealthy') {
+            $this->sendNotification($Result, $service['notified']);
+            $Result['notified'] = true;
+        } else {
+            $Result['notified'] = false;
+        }
+
         $this->saveCheckHistory($Result);
         return $Result;
     }
@@ -128,6 +135,30 @@ trait HealthChecksServiceChecker {
         ];
         $this->saveCheckHistory($Result);
         return $Result;
+    }
+
+    private function sendNotification($result, $notifed = false) {
+        if (isset($this->pluginConfig['smtpEnable']) && $this->pluginConfig['smtpEnable'] == true) {
+            if (isset($this->pluginConfig['sendOnce']) && $this->pluginConfig['sendOnce'] == true && $notifed) {
+                return; // Skip sending if already notified and sendOnce is true
+            }
+            if (isset($this->pluginConfig['smtpFrom']) && !empty($this->pluginConfig['smtpFrom'])) {
+                $this->notifications->setSMTPConfig(['from_email' => $this->pluginConfig['smtpFrom']]);
+            }
+            if (isset($this->pluginConfig['smtpName']) && !empty($this->pluginConfig['smtpName'])) {
+                $this->notifications->setSMTPConfig(['from_name' => $this->pluginConfig['smtpName']]);
+            }
+            if (isset($this->pluginConfig['smtpTo']) && !empty($this->pluginConfig['smtpTo'])) {
+                $smtpTo = $this->pluginConfig['smtpTo'];
+            } else {
+                $smtpTo = $this->config->get('SMTP', 'to_email') ?? '';
+            }
+            $this->notifications->sendSmtpEmail(
+                $smtpTo,
+                "Service Alert: {$result['name']} - {$result['status']}",
+                "The service {$result['name']} is currently {$result['status']}.\n\nDetails:\n" . json_encode($result)
+            );
+        }
     }
 
 }

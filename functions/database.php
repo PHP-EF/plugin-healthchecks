@@ -42,6 +42,9 @@ trait HealthChecksDatabase {
             '0.0.1' => [],
             '0.0.2' => [
                 "ALTER TABLE services ADD COLUMN schedule TEXT DEFAULT '*/5 * * * *'",
+            ],
+            '0.0.3' => [
+                "ALTER TABLE services ADD COLUMN schedule notified BOOLEAN DEFAULT 0",
             ]
         ];
     }
@@ -62,7 +65,8 @@ trait HealthChecksDatabase {
             verify_ssl BOOLEAN DEFAULT 0,
             schedule TEXT DEFAULT '*/5 * * * *', -- Default to every 5 minutes
             last_checked DATETIME,
-            status TEXT
+            status TEXT,
+            notified BOOLEAN DEFAULT 0
         )");
 
         ## Create first example entries in the services table
@@ -232,7 +236,7 @@ trait HealthChecksDatabase {
             ':service_id' => $result['id'],
             ':status' => $result['status'],
             ':response' => $result['response'] ?? null,
-            ':error' => $result['error'] ?? null
+            ':error' => $result['error'] ?? null,
         ]);
         $this->saveCheckStatus($result);
     }
@@ -242,13 +246,15 @@ trait HealthChecksDatabase {
         $stmt = $this->sql->prepare("
             UPDATE services SET
                 last_checked = datetime('now'),
-                status = :status
+                status = :status,
+                notified = :notified
             WHERE id = :id
         ");
 
         $stmt->execute([
             ':status' => $result['status'],
-            ':id' => $result['id']
+            ':id' => $result['id'],
+            ':notified' => $result['notified'] ?? 0
         ]);
     }
 

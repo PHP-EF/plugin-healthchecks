@@ -3,7 +3,7 @@
   <br>
   <!--<a href=""><img src="" alt="Markdownify" width="200"></a>-->
   <br>
-  Example Plugin
+  Health Checks Plugin
   <br>
 </h1>
 
