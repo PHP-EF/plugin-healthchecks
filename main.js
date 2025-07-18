@@ -19,21 +19,21 @@ function loadServiceConfiguration(row) {
 }
 
 function hideOrShowFields(type) {
-    $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".mb-3").hide();
-    $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".mb-3").hide();
-    $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".mb-3").hide();
-    $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".mb-3").hide();
-    $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".mb-3").hide();
+    $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").hide();
+    $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".col-md-6").hide();
+    $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".col-md-6").hide();
+    $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".col-md-6").hide();
+    $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".col-md-6").hide();
     switch(type) {
         case "web":
-            $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".mb-3").show();
-            $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".mb-3").show();
-            $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".mb-3").show();
-            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".mb-3").show();
-            $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".mb-3").show();
+            $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".col-md-6").show();
+            $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".col-md-6").show();
+            $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".col-md-6").show();
+            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").show();
+            $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".col-md-6").show();
             break;
         case "tcp":
-            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".mb-3").show();
+            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").show();
             break;
         case "icmp":
             break;
