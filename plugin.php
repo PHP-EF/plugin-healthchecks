@@ -194,62 +194,67 @@ class healthChecksPlugin extends phpef {
 								<div class="modal-body">
 									<form id="healthChecksServiceForm">
 										<input type="hidden" name="id">
-										<div class="mb-3">
-											<label for="serviceEnabled" class="form-label">Enabled</label>
-											<div class="form-check form-switch">
-												<input class="form-check-input info-field" type="checkbox" name="enabled" id="serviceEnabled" data-type="checkbox" data-label="Enabled">
+										<div class="row">
+											<div class="col-md-6 pb-2">
+												<label for="serviceName" class="form-label">Service Name</label>
+												<input type="text" class="form-control" id="serviceName" name="name" required>
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceType" class="form-label">Service Type</label>
+												<select class="form-select" id="serviceType" name="type" required>
+													<option disabled>Select Service Type</option>
+													<option value="web">Web</option>
+													<option value="tcp">TCP</option>
+													<option value="icmp">ICMP</option>
+												</select>
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceHost" class="form-label">FQDN / IP</label>
+												<input type="text" class="form-control" id="serviceHost" name="host" placeholder="app.example.com" required>
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="servicePort" class="form-label">Port</label>
+												<input type="number" class="form-control" id="servicePort" name="port" placeholder="80">
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceProtocol" class="form-label">Protocol</label>
+												<select class="form-select" id="serviceProtocol" name="protocol">
+													<option disabled>Select Protocol</option>
+													<option value="http">HTTP</option>
+													<option value="https">HTTPS</option>
+												</select>
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceHttpPath" class="form-label">HTTP Path</label>
+												<input type="text" class="form-control" id="serviceHttpPath" name="http_path" placeholder="/">
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceExpectedStatus" class="form-label">Expected HTTP Status</label>
+												<input type="number" class="form-control" id="serviceExpectedStatus" name="http_expected_status" placeholder="200">
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceTimeout" class="form-label">Timeout (seconds)</label>
+												<input type="number" class="form-control" id="serviceTimeout" name="timeout" placeholder="15">
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="serviceSchedule" class="form-label">Schedule (Cron Format)</label>
+												<input type="text" class="form-control" id="serviceSchedule" name="schedule" placeholder="*/5 * * * *">
 											</div>
 										</div>
-										<div class="mb-3">
-											<label for="serviceName" class="form-label">Service Name</label>
-											<input type="text" class="form-control" id="serviceName" name="name" required>
-										</div>
-										<div class="mb-3">
-											<label for="serviceType" class="form-label">Service Type</label>
-											<select class="form-select" id="serviceType" name="type" required>
-												<option disabled>Select Service Type</option>
-												<option value="web">Web</option>
-												<option value="tcp">TCP</option>
-												<option value="icmp">ICMP</option>
-											</select>
-										</div>
-										<div class="mb-3">
-											<label for="serviceHost" class="form-label">FQDN / IP</label>
-											<input type="text" class="form-control" id="serviceHost" name="host" placeholder="app.example.com" required>
-										</div>
-										<div class="mb-3">
-											<label for="servicePort" class="form-label">Port</label>
-											<input type="number" class="form-control" id="servicePort" name="port" placeholder="80">
-										</div>
-										<div class="mb-3">
-											<label for="serviceProtocol" class="form-label">Protocol</label>
-											<select class="form-select" id="serviceProtocol" name="protocol">
-												<option disabled>Select Protocol</option>
-												<option value="http">HTTP</option>
-												<option value="https">HTTPS</option>
-											</select>
-										</div>
-										<div class="mb-3">
-											<label for="serviceHttpPath" class="form-label">HTTP Path</label>
-											<input type="text" class="form-control" id="serviceHttpPath" name="http_path" placeholder="/">
-										</div>
-										<div class="mb-3">
-											<label for="serviceExpectedStatus" class="form-label">Expected HTTP Status</label>
-											<input type="number" class="form-control" id="serviceExpectedStatus" name="http_expected_status" placeholder="200">
-										</div>
-										<div class="mb-3">
-											<label for="serviceVerifySSL" class="form-label">Verify SSL/TLS</label>
-											<div class="form-check form-switch">
-												<input class="form-check-input info-field" type="checkbox" name="verify_ssl" id="serviceVerifySSL" data-type="checkbox" data-label="Enabled">
+										<hr>
+										<div class="row">
+											<div class="col-md-6 pb-2">
+												<label for="serviceEnabled" class="form-label">Enabled</label>
+												<div class="form-check form-switch">
+													<input class="form-check-input info-field" type="checkbox" name="enabled" id="serviceEnabled" data-type="checkbox" data-label="Enabled">
+												</div>
 											</div>
-										</div>
-										<div class="mb-3">
-											<label for="serviceTimeout" class="form-label">Timeout (seconds)</label>
-											<input type="number" class="form-control" id="serviceTimeout" name="timeout" placeholder="15">
-										</div>
-										<div class="mb-3">
-											<label for="serviceSchedule" class="form-label">Schedule (Cron Format)</label>
-											<input type="text" class="form-control" id="serviceSchedule" name="schedule" placeholder="*/5 * * * *">
+											<div class="col-md-6 pb-2">
+												<label for="serviceVerifySSL" class="form-label">Verify SSL/TLS</label>
+												<div class="form-check form-switch">
+													<input class="form-check-input info-field" type="checkbox" name="verify_ssl" id="serviceVerifySSL" data-type="checkbox" data-label="Enabled">
+												</div>
+											</div>
 										</div>
 									</form>
 								</div>
@@ -350,8 +355,7 @@ class healthChecksPlugin extends phpef {
 				};
 				']),
 				$this->settingsOption('notice', '', ['title' => 'Information', 'body' => '
-				<p>This plugin enables support for ICMP, TCP & HTTP/S Health Checks.</p>
-				<br/>']),
+				<p>This plugin enables support for ICMP, TCP & HTTP/S Health Checks.</p>']),
 			),
 			'Plugin Settings' => array(
 				$this->settingsOption('auth', 'ACL-READ', ['label' => 'Plugin User ACL', 'help' => 'This ACL is used to determine who can query the health of services. (Required for viewing the widget)']),
@@ -359,6 +363,40 @@ class healthChecksPlugin extends phpef {
 			),
 			'Health Checks' => array(
 				$this->settingsOption('bootstrap-table', 'HealthChecksTable', ['id' => 'HealthChecksTable', 'columns' => $HealthChecksTableColumns, 'dataAttributes' => $HealthChecksTableAttributes, 'width' => '12']),
+			)
+		);
+	}
+
+public function _pluginGetServicesSettings() {
+
+        $AppendNone = array(
+            [
+                "name" => 'None',
+                "value" => ''
+            ]
+        );
+
+		return array(
+			'Health Checks' => array(
+				$this->settingsOption('input', 'id', ['label' => 'Service ID', 'attr' => 'hidden']),
+				$this->settingsOption('input', 'name', ['label' => 'Service Name', 'placeholder' => 'My Service']),
+				$this->settingsOption('select', 'type', ['label' => 'Service Type', 'options' => [
+					['name' => 'Web (HTTP/S)', 'value' => 'web'],
+					['name' => 'TCP', 'value' => 'tcp'],
+					['name' => 'ICMP (Ping)', 'value' => 'icmp']
+				]]),
+				$this->settingsOption('input', 'host', ['label' => 'FQDN / IP', 'placeholder' => 'app.example.com']),
+				$this->settingsOption('input', 'port', ['label' => 'Port', 'placeholder' => '80']),
+				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [
+					['name' => 'HTTP', 'value' => 'http'],
+					['name' => 'HTTPS', 'value' => 'https']
+				], 'default' => 'http']),
+				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'Path to check, e.g. /status']),
+				$this->settingsOption('input', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'default' => '200']),
+				$this->settingsOption('checkbox', 'verify_ssl', ['label' => 'Verify SSL/TLS', 'default' => true, 'help' => 'Enable SSL/TLS verification']),
+				$this->settingsOption('input', 'timeout', ['label' => 'Timeout (seconds)', 'placeholder' => '15', 'default' => '15']),
+				$this->settingsOption('input', 'schedule', ['label' => 'Schedule (Cron Format)', 'placeholder' => '*/5 * * * *', 'default' => '*/5 * * * * *']),
+				$this->settingsOption('checkbox', 'enabled', ['label' => 'Enabled', 'default' => true, 'help' => 'Enable this service for health checks'])
 			)
 		);
 	}
