@@ -40,7 +40,9 @@ trait HealthChecksDatabase {
     public function migrationScripts() {
         return [
             '0.0.1' => [],
-            '0.0.2' => []
+            '0.0.2' => [
+                "ALTER TABLE services ADD COLUMN schedule TEXT DEFAULT '*/5 * * * *'",
+            ]
         ];
     }
 
@@ -53,16 +55,18 @@ trait HealthChecksDatabase {
             type TEXT NOT NULL,
             host TEXT NOT NULL,
             port INTEGER,
-            protocol TEXT DEFAULT 'http',
+            timeout INTEGER DEFAULT 15,
+            protocol TEXT,
             http_path TEXT,
-            timeout INTEGER DEFAULT 5,
-            http_expected_status INTEGER DEFAULT 200,
+            http_expected_status INTEGER,
+            verify_ssl BOOLEAN DEFAULT 0,
+            schedule TEXT DEFAULT '*/5 * * * *', -- Default to every 5 minutes
             last_checked DATETIME,
             status TEXT
         )");
 
         ## Create first example entries in the services table
-        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_path) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_path)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_path, schedule) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_path, :schedule)");
         $stmt->execute([
             ':name' => 'Example Service',
             ':enabled' => 0,
@@ -71,7 +75,8 @@ trait HealthChecksDatabase {
             ':port' => 80,
             ':protocol' => 'http',
             ':http_expected_status' => 200,
-            ':http_path' => '/'
+            ':http_path' => '/',
+            ':schedule' => '*/5 * * * *'
         ]);
         $stmt->execute([
             ':name' => 'Example TCP Service',
@@ -81,7 +86,8 @@ trait HealthChecksDatabase {
             ':port' => 80,
             ':protocol' => 'tcp',
             ':http_expected_status' => null,
-            ':http_path' => null
+            ':http_path' => null,
+            ':schedule' => '*/5 * * * *'
         ]);
         $stmt->execute([
             ':name' => 'Example ICMP Service',
@@ -91,7 +97,8 @@ trait HealthChecksDatabase {
             ':port' => null,
             ':protocol' => 'icmp',
             ':http_expected_status' => null,
-            ':http_path' => null
+            ':http_path' => null,
+            ':schedule' => '*/5 * * * *'
         ]);
 
         $this->sql->exec("CREATE TABLE IF NOT EXISTS history (
@@ -120,6 +127,20 @@ trait HealthChecksDatabase {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Get a Service by ID from Database
+    public function getServiceById($id) {
+        $stmt = $this->sql->prepare("SELECT * FROM services WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Get enabled Services from Database
+    public function getEnabledServices() {
+        $stmt = $this->sql->prepare("SELECT * FROM services WHERE enabled = 1");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Get the service history for a service
     public function getServiceHistory($serviceId) {
         $stmt = $this->sql->prepare("SELECT * FROM history WHERE service_id = :service_id ORDER BY checked_at DESC");
@@ -129,7 +150,7 @@ trait HealthChecksDatabase {
 
     // Create a new service in the database
     public function createService($data) {
-        $stmt = $this->sql->prepare("INSERT INTO services (name, type, host, port, protocol, http_path, timeout, http_expected_status) VALUES (:name, :type, :host, :port, :protocol, :http_path, :timeout, :http_expected_status)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_path, timeout, schedule, http_expected_status, verify_ssl) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_path, :timeout, :schedule, :http_expected_status, :verify_ssl)");
         switch($data['type']) {
             case 'icmp':
                 $data['protocol'] = 'icmp'; // Set protocol to ICMP
@@ -147,15 +168,54 @@ trait HealthChecksDatabase {
         }
         $stmt->execute([
             ':name' => $data['name'],
+            ':enabled' => $data['enabled'] ?? 0,
             ':type' => $data['type'],
             ':host' => $data['host'],
             ':port' => $data['port'] ?? null,
             ':protocol' => $data['protocol'] ?? null,
             ':http_path' => $data['http_path'] ?? null,
             ':timeout' => $data['timeout'] ?? 5,
-            ':http_expected_status' => $data['http_expected_status'] ?? null
+            ':schedule' => $data['schedule'] ?? '*/5 * * * *',
+            ':http_expected_status' => $data['http_expected_status'] ?? null,
+            ':verify_ssl' => $data['verify_ssl'] ?? 0
         ]);
         return $this->sql->lastInsertId();
+    }
+
+    // Update a service in the database
+    public function updateService($id, $data) {
+        $stmt = $this->sql->prepare("UPDATE services SET name = :name, enabled = :enabled, type = :type, host = :host, port = :port, protocol = :protocol, http_path = :http_path, timeout = :timeout, schedule = :schedule, http_expected_status = :http_expected_status, verify_ssl = :verify_ssl WHERE id = :id");
+        switch($data['type']) {
+            case 'icmp':
+                $data['protocol'] = 'icmp'; // Set protocol to ICMP
+                $data['port'] = ''; // Set protocol to ICMP
+                break;
+            case 'tcp':
+                $data['protocol'] = 'tcp'; // Set protocol to TCP
+                break;
+            case 'web':
+                $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
+                $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
+                $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
+                break;
+            default:
+                break;
+        }
+        $stmt->execute([
+            ':id' => $id,
+            ':enabled' => $data['enabled'] ?? 0,
+            ':name' => $data['name'],
+            ':type' => $data['type'],
+            ':host' => $data['host'],
+            ':port' => $data['port'] ?? null,
+            ':protocol' => $data['protocol'] ?? null,
+            ':http_path' => $data['http_path'] ?? null,
+            ':timeout' => $data['timeout'] ?? 5,
+            ':schedule' => $data['schedule'] ?? '*/5 * * * *',
+            ':http_expected_status' => $data['http_expected_status'] ?? null,
+            ':verify_ssl' => $data['verify_ssl'] ?? 0,
+        ]);
+        return $stmt->rowCount() > 0;
     }
 
     // Delete a service from the database

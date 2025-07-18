@@ -2,6 +2,14 @@
 trait HealthChecksServiceChecker {
     private $HealthCheckServices;
 
+    public function check($id) {
+        $service = $this->getServiceById($id);
+        if (!$service) {
+            return ['status' => 'error', 'message' => 'Service not found'];
+        }
+        return $this->checkService($service);
+    }
+
     public function checkAll() {
         $results = [];
         $services = $this->getServices();
@@ -11,27 +19,43 @@ trait HealthChecksServiceChecker {
         return $results;
     }
 
-    private function checkService($service) {
-        switch ($service['type']) {
-            case 'web':
-                return $this->checkHttpService($service);
-            case 'tcp':
-                return $this->checkTcpPort($service);
-            case 'icmp':
-                return $this->checkIcmpPing($service);
-            default:
-                return ['status' => 'unknown', 'message' => 'Unsupported service type'];
+    public function checkService($service) {
+        if ($service['enabled'] == 1) {
+            switch ($service['type']) {
+                case 'web':
+                    return $this->checkHttpService($service);
+                case 'tcp':
+                    return $this->checkTcpPort($service);
+                case 'icmp':
+                    return $this->checkIcmpPing($service);
+                default:
+                    return ['status' => 'unknown', 'message' => 'Unsupported service type'];
+            }
         }
     }
 
     private function checkHttpService($service) {
         $url = "{$service['protocol']}://{$service['host']}:{$service['port']}{$service['http_path']}";
         $ch = curl_init($url);
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $service['timeout'] ?? 5);
-        curl_exec($ch);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $service['timeout'] ?: 5);
+
+        // Handle SSL verification based on $service['verify_ssl']
+        if (isset($service['verify_ssl']) && $service['verify_ssl'] == false) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        }
+
+        $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
+        $responseTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+        $errorCode = curl_errno($ch);
+        $errorCodeString = curl_strerror($errorCode);
         curl_close($ch);
 
         $Result = [
@@ -40,32 +64,34 @@ trait HealthChecksServiceChecker {
             'type' => $service['type'],
             'host' => $service['host'],
             'port' => $service['port'],
-            'timeout' => $service['timeout'] ?? 5,
+            'timeout' => $service['timeout'] ?: 5,
             'status' => $httpCode == $service['http_expected_status'] ? 'healthy' : 'unhealthy',
             'http_code' => $httpCode,
             'path' => $service['http_path'] ?? '/',
             'protocol' => $service['protocol'] ?? 'http',
-            'response_time' => curl_getinfo($ch, CURLINFO_TOTAL_TIME),
-            'response' => curl_multi_getcontent($ch),
+            'response_time' => $responseTime,
+            'response' => $response,
             'status_message' => $httpCode == $service['http_expected_status'] ? 'Service is healthy' : 'Service is unhealthy',
             'error' => empty($error) ? null : $error,
             'error_message' => empty($error) ? null : "Error occurred: $error",
-            'error_code' => curl_errno($ch),
-            'error_code_string' => curl_strerror(curl_errno($ch)),
+            'error_code' => $errorCode,
+            'error_code_string' => $errorCodeString,
         ];
+
         $this->saveCheckHistory($Result);
         return $Result;
     }
 
     private function checkTcpPort($service) {
-        $fp = @fsockopen($service['host'], $service['port'], $errno, $errstr, $service['timeout'] ?? 3);
+        $timeout = (int)($service['timeout'] ?: 5);
+        $fp = @fsockopen($service['host'], $service['port'], $errno, $errstr, $timeout);
         $Result = [
             'id' => $service['id'],
             'name' => $service['name'],
             'type' => $service['type'],
             'host' => $service['host'],
             'port' => $service['port'],
-            'timeout' => $service['timeout'] ?? 5,
+            'timeout' => $timeout,
         ];
         if ($fp) {
             fclose($fp);
@@ -81,7 +107,7 @@ trait HealthChecksServiceChecker {
     private function checkIcmpPing($service) {
         $host = escapeshellarg($service['host']);
         $count = $service['count'] ?? 1;
-        $timeout = $service['timeout'] ?? 5;
+        $timeout = $service['timeout'] ?: 5;
 
         $cmd = stripos(PHP_OS, 'WIN') === 0
             ? "ping -n $count -w " . ($timeout * 1000) . " $host"
@@ -94,7 +120,7 @@ trait HealthChecksServiceChecker {
             'name' => $service['name'],
             'type' => $service['type'],
             'host' => $service['host'],
-            'timeout' => $service['timeout'] ?? 5,
+            'timeout' => $service['timeout'] ?: 5,
             'status' => $resultCode === 0 ? 'healthy' : 'unhealthy',
             'response' => implode("\n", $output),
             'error_code' => $resultCode,
