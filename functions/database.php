@@ -44,7 +44,7 @@ trait HealthChecksDatabase {
                 "ALTER TABLE services ADD COLUMN schedule TEXT DEFAULT '*/5 * * * *'",
             ],
             '0.0.3' => [
-                "ALTER TABLE services ADD COLUMN schedule notified BOOLEAN DEFAULT 0",
+                "ALTER TABLE services ADD COLUMN notified BOOLEAN DEFAULT 0",
             ]
         ];
     }
