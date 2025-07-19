@@ -235,7 +235,7 @@ trait HealthChecksDatabase {
         $stmt->execute([
             ':service_id' => $result['id'],
             ':status' => $result['status'],
-            ':response' => $result['response'] ?? null,
+            ':response' => '', //$result['response'] ?? null,
             ':error' => $result['error'] ?? null,
         ]);
         $this->saveCheckStatus($result);
