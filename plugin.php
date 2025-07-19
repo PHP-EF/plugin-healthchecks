@@ -145,8 +145,6 @@ class healthChecksPlugin extends phpef {
 				$this->settingsOption('input', 'smtpFrom', ['label' => 'From Address', 'help' => 'The email address that notifications will be sent from. This will default to the globally configured SMTP From Address if not set.', 'placeholder' => $this->config->get('SMTP', 'from_email') ?? '']),
 				$this->settingsOption('input', 'smtpTo', ['label' => 'To Address', 'help' => 'The email address that notifications will be sent to. This will default to the globally configured SMTP To Address if not set.', 'placeholder' => $this->config->get('SMTP', 'to_email') ?? ''])
             ),
-            "Webhooks (Not Implemented)" => array(
-			),
             "Pushover" => array(
 				$this->settingsOption('checkbox', 'pushoverEnable', ['label' => 'Enable Pushover Notifications', 'help' => 'Enable to send pushover notifications for service status changes.']),
 				$this->settingsOption('select','pushoverPriority', [
@@ -160,7 +158,9 @@ class healthChecksPlugin extends phpef {
 				]),
 				$this->settingsOption('password-alt', 'pushoverApiToken', ['label' => 'Pushover API Token', 'help' => 'The Pushover API Token to use for sending notifications. This will default to the globally configured API Token if not set.', 'placeholder' => '']),
 				$this->settingsOption('password-alt', 'pushoverUserKey', ['label' => 'Pushover User Key', 'help' => 'The Pushover User Key to send notifications to. This will default to the globally configured User Key if not set.', 'placeholder' => ''])
-            )
+            ),
+			"Webhooks (Not Implemented)" => array(
+			)
         );
 
 		return array(
