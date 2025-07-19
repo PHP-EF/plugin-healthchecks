@@ -138,6 +138,31 @@ class healthChecksPlugin extends phpef {
             ]
         );
 
+		$NotificationProviders = array(
+            "SMTP" => array(
+				$this->settingsOption('checkbox', 'smtpEnable', ['label' => 'Enable SMTP Notifications', 'help' => 'Enable to send email notifications for service status changes.']),
+				$this->settingsOption('input', 'smtpName', ['label' => 'From Name', 'help' => 'The name displayed that notifications will be sent from. This will default to the globally configured SMTP From Name if not set.', 'placeholder' => $this->config->get('SMTP', 'from_name') ?? '']),
+				$this->settingsOption('input', 'smtpFrom', ['label' => 'From Address', 'help' => 'The email address that notifications will be sent from. This will default to the globally configured SMTP From Address if not set.', 'placeholder' => $this->config->get('SMTP', 'from_email') ?? '']),
+				$this->settingsOption('input', 'smtpTo', ['label' => 'To Address', 'help' => 'The email address that notifications will be sent to. This will default to the globally configured SMTP To Address if not set.', 'placeholder' => $this->config->get('SMTP', 'to_email') ?? ''])
+            ),
+            "Webhooks (Not Implemented)" => array(
+			),
+            "Pushover" => array(
+				$this->settingsOption('checkbox', 'pushoverEnable', ['label' => 'Enable Pushover Notifications', 'help' => 'Enable to send pushover notifications for service status changes.']),
+				$this->settingsOption('select','pushoverPriority', [
+					'label' => 'Pushover Priority',
+					'options' => [
+						['name' => 'Normal', 'value' => 0],
+						['name' => 'High', 'value' => 1],
+						['name' => 'Emergency', 'value' => 2]
+					],
+					'help' => 'The priority of the Pushover notification. Normal is the default, High will send a notification immediately, and Emergency will resend until acknowledged.'
+				]),
+				$this->settingsOption('password-alt', 'pushoverApiToken', ['label' => 'Pushover API Token', 'help' => 'The Pushover API Token to use for sending notifications. This will default to the globally configured API Token if not set.', 'placeholder' => '']),
+				$this->settingsOption('password-alt', 'pushoverUserKey', ['label' => 'Pushover User Key', 'help' => 'The Pushover User Key to send notifications to. This will default to the globally configured User Key if not set.', 'placeholder' => ''])
+            )
+        );
+
 		return array(
 			'About' => array (
 				$this->settingsOption('js', 'pluginJs', ['src' => '/api/page/plugin/Health Checks/js']),
@@ -365,11 +390,10 @@ class healthChecksPlugin extends phpef {
 				$this->settingsOption('bootstrap-table', 'HealthChecksTable', ['id' => 'HealthChecksTable', 'columns' => $HealthChecksTableColumns, 'dataAttributes' => $HealthChecksTableAttributes, 'width' => '12']),
 			),
 			'Notifications' => array(
-				$this->settingsOption('checkbox', 'smtpEnable', ['label' => 'Enable SMTP Notifications', 'help' => 'Enable to send email notifications for service status changes.']),
 				$this->settingsOption('checkbox', 'sendOnce', ['label' => 'Only send notifications once', 'help' => 'For each service state change, only send each notification type once.']),
-				$this->settingsOption('input', 'smtpName', ['label' => 'From Name', 'help' => 'The name displayed that notifications will be sent from. This will default to the globally configured SMTP From Name if not set.', 'placeholder' => $this->config->get('SMTP', 'from_name') ?? '']),
-				$this->settingsOption('input', 'smtpFrom', ['label' => 'From Address', 'help' => 'The email address that notifications will be sent from. This will default to the globally configured SMTP From Address if not set.', 'placeholder' => $this->config->get('SMTP', 'from_email') ?? '']),
-				$this->settingsOption('input', 'smtpTo', ['label' => 'To Address', 'help' => 'The email address that notifications will be sent to. This will default to the globally configured SMTP To Address if not set.', 'placeholder' => $this->config->get('SMTP', 'to_email') ?? '']),
+				$this->settingsOption('checkbox', 'notifyOnHealthy', ['label' => 'Notify on Healthy', 'help' => 'Send a notification when a service returns to a healthy state. (This will only be sent once)']),
+				$this->settingsOption('hr'),
+				$this->settingsOption('accordion', 'NotificationProviders', ['id' => 'NotificationProviders', 'options' => $NotificationProviders, 'label' => 'Notification Providers', 'width' => '12']),
 			)
 		);
 	}

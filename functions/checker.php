@@ -58,6 +58,15 @@ trait HealthChecksServiceChecker {
         $errorCodeString = curl_strerror($errorCode);
         curl_close($ch);
 
+        $status = 'healthy';
+        if ($error) {
+            $status = 'unhealthy';
+            $error = "CURL Error: $error";
+        } elseif ($httpCode != $service['http_expected_status']) {
+            $status = 'unhealthy';
+            $error = "Expected HTTP status {$service['http_expected_status']}, got $httpCode";
+        }        
+
         $Result = [
             'id' => $service['id'],
             'name' => $service['name'],
@@ -65,23 +74,26 @@ trait HealthChecksServiceChecker {
             'host' => $service['host'],
             'port' => $service['port'],
             'timeout' => $service['timeout'] ?: 5,
-            'status' => $httpCode == $service['http_expected_status'] ? 'healthy' : 'unhealthy',
+            'status' => $status,
+            'http_expected_status' => $service['http_expected_status'],
             'http_code' => $httpCode,
             'path' => $service['http_path'] ?? '/',
             'protocol' => $service['protocol'] ?: 'http',
             'response_time' => $responseTime,
             'response' => $response,
-            'status_message' => $httpCode == $service['http_expected_status'] ? 'Service is healthy' : 'Service is unhealthy',
+            'status_message' => $status == 'healthy' ? 'Service is healthy' : 'Service is unhealthy',
             'error' => empty($error) ? null : $error,
-            'error_message' => empty($error) ? null : "Error occurred: $error",
-            'error_code' => $errorCode,
-            'error_code_string' => $errorCodeString,
+            'curl_error_code' => $errorCode,
+            'curl_error_code_string' => $errorCodeString,
         ];
 
         if ($Result['status'] == 'unhealthy') {
             $this->sendNotification($Result, $service['notified']);
             $Result['notified'] = true;
         } else {
+            if (($this->pluginConfig['notifyOnHealthy'] ?? false) && $service['status'] == 'unhealthy') {
+                $this->sendNotification($Result, false);
+            }
             $Result['notified'] = false;
         }
 
@@ -138,10 +150,12 @@ trait HealthChecksServiceChecker {
     }
 
     private function sendNotification($result, $notifed = false) {
+        if (isset($this->pluginConfig['sendOnce']) && $this->pluginConfig['sendOnce'] == true && $notifed) {
+            return; // Skip sending if already notified and sendOnce is true
+        }
+
+        // SMTP Notification
         if (isset($this->pluginConfig['smtpEnable']) && $this->pluginConfig['smtpEnable'] == true) {
-            if (isset($this->pluginConfig['sendOnce']) && $this->pluginConfig['sendOnce'] == true && $notifed) {
-                return; // Skip sending if already notified and sendOnce is true
-            }
             if (isset($this->pluginConfig['smtpFrom']) && !empty($this->pluginConfig['smtpFrom'])) {
                 $this->notifications->setSMTPConfig(['from_email' => $this->pluginConfig['smtpFrom']]);
             }
@@ -156,8 +170,49 @@ trait HealthChecksServiceChecker {
             $this->notifications->sendSmtpEmail(
                 $smtpTo,
                 "Service Alert: {$result['name']} - {$result['status']}",
-                "The service {$result['name']} is currently {$result['status']}.\n\nDetails:\n" . json_encode($result)
+                "The service {$result['name']} is {$result['status']}.\n\nDetails:\n" . json_encode($result)
             );
+        }
+
+        // Pushover Notification
+        if (isset($this->pluginConfig['pushoverEnable']) && $this->pluginConfig['pushoverEnable'] == true) {
+            $Pushover = new Pushover();
+            $globalPushoverApiToken = $this->config->get('Pushover', 'ApiToken');
+            $globalPushoverUserKey = $this->config->get('Pushover', 'UserKey');
+            if (isset($this->pluginConfig['pushoverApiToken']) && !empty($this->pluginConfig['pushoverApiToken'])) {
+                $Pushover->setToken($this->pluginConfig['pushoverApiToken']);
+            } elseif (!empty($globalPushoverApiToken)) {
+                $Pushover->setToken($globalPushoverApiToken);
+            }
+            if (isset($this->pluginConfig['pushoverUserKey']) && !empty($this->pluginConfig['pushoverUserKey'])) {
+                $Pushover->setUser($this->pluginConfig['pushoverUserKey']);
+            } elseif (!empty($globalPushoverUserKey)) {
+                $Pushover->setUser($globalPushoverUserKey);
+            }
+
+            $Pushover->setTitle("Service Alert: {$result['name']} - {$result['status']}");
+
+            $details = "";
+            foreach ($result as $key => $value) {
+                if ($key != "response") {
+                    $details .= "<li><strong>" . htmlspecialchars($key) . ":</strong> " . htmlspecialchars($value) . "</li>";
+                }
+            }
+
+            $message = "The service {$result['name']} is {$result['status']}.\n\nDetails:\n<ul>$details</ul>";
+
+            $Pushover->setMessage($message);
+            $Pushover->setHtml(1);
+            $Pushover->setUrl(($this->config->get('System', 'websiteURL') ?? '') . '/');
+            $Pushover->setUrlTitle('View Health Check Status');
+            $Pushover->setPriority($this->pluginConfig['pushoverPriority'] ?? 0);
+            $Pushover->setTimestamp(time());
+            // $Pushover->setDebug(true);
+            // $Pushover->setRetry(60); //Used with Priority = 2; Pushover will resend the notification every 60 seconds until the user accepts.
+            // $Pushover->setExpire(3600); //Used with Priority = 2; Pushover will resend the notification every 60 seconds for 3600 seconds. After that point, it stops sending notifications.
+            // $Pushover->setCallback('https://example.com/'); // Notification callback URL
+            // $Pushover->setSound('bike');
+            $Pushover->send();
         }
     }
 
