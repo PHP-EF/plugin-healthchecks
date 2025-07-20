@@ -353,6 +353,10 @@ class healthChecksPlugin extends phpef {
 						$("#SettingsModal").modal("hide");
 					},
 					"click .test": function (e, value, row, index) {
+						if (row.enabled == 0) {
+							toast("Error", "", "Service is not enabled, please enable it before testing.", "danger");
+							return;
+						}
 						toast("Test Started", row.name, "Testing " + row.name, "info","10000");
 						queryAPI("GET", "/api/plugin/healthchecks/check/"+row.id).done(function(data) {
 							if (data["result"] == "Success") {

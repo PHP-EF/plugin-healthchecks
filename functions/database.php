@@ -113,7 +113,7 @@ trait HealthChecksDatabase {
             service_id INTEGER NOT NULL,
             checked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT,
-            response TEXT,
+            result TEXT,
             error TEXT,
             FOREIGN KEY (service_id) REFERENCES services(id)
         )");
