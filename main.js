@@ -46,3 +46,57 @@ function addCheckboxValueToFormData(formData, checkboxId, fieldName) {
     const isChecked = $(checkboxId).is(":checked") ? "1" : "0";
     formData.push({ name: fieldName, value: isChecked });
 }
+
+function healthStatusFormatter(value) {
+    if (value === 'healthy') {
+    return '<span class="badge bg-success">Healthy</span>';
+    } else if (value === 'unhealthy') {
+    return '<span class="badge bg-danger">Unhealthy</span>';
+    } else {
+    return '<span class="badge bg-secondary">Unknown</span>';
+    }
+}
+
+function convertUTCHealthLastCheckedStringToLocal(utcString) {
+    const [datePart, timePart] = utcString.split(' ');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes, seconds] = timePart.split(':').map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+    return utcDate.toLocaleString();
+}
+
+function loadHealthHistory(serviceId) {
+    let historyElem = '#historyTable' + serviceId;
+    $(historyElem).bootstrapTable('destroy'); // Optional: clear previous table
+    $(historyElem).bootstrapTable({
+        url: `/api/plugin/healthchecks/services/${serviceId}/history`,
+        dataField: 'data',
+        columns: [
+            {
+                field: 'checked_at',
+                title: 'Timestamp',
+                formatter: function(value) {
+                    return convertUTCHealthLastCheckedStringToLocal(value);
+                }
+            },
+            {
+                field: 'status',
+                title: 'Status',
+                formatter: 'healthStatusFormatter'
+            },
+            {
+                field: 'error',
+                title: 'Error(s)'
+            },
+            {
+                title: 'Actions',
+                formatter: function() {
+                    return `<button class="btn btn-primary btn-sm" onclick="inspectHistory(${serviceId})">Inspect</button>`;
+                }
+            }
+        ],
+        pagination: true,
+        search: true,
+        showRefresh: true
+    });
+}
