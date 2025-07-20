@@ -60,10 +60,12 @@
 
   <script>
     // Event listener for accordion expansion
-    document.addEventListener('click', function(event) {
-      if (event.target.matches('.accordion-button')) {
+    document.body.addEventListener('shown.bs.collapse', function (event) {
+      // Check if the event target is part of an accordion
+      if (event.target.classList.contains('accordion-collapse', 'healthCheckAccordion')) {
         const serviceId = event.target.getAttribute('data-service-id');
         if (serviceId) {
+          // Fetch and populate the history table for this service
           loadHealthHistory(serviceId);
         }
       }
@@ -91,14 +93,14 @@
               <div class="accordion pb-1" id="accordion\${service.id}">
                   <div class="accordion-item">
                       <div class="accordion-header" id="heading\${service.id}">
-                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse\${service.id}" aria-expanded="true" aria-controls="collapse\${service.id}" data-service-id="\${service.id}">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse\${service.id}" aria-expanded="true" aria-controls="collapse\${service.id}">
                               \${serviceName} &nbsp;&nbsp; \${healthStatusFormatter(serviceStatus)}
                               <small class="text-muted ms-2">
                                   <strong>Last Checked:</strong> \${serviceLastChecked}
                               </small>
                           </button>
                       </div>
-                      <div id="collapse\${service.id}" class="accordion-collapse collapse" aria-labelledby="heading\${service.id}" data-bs-parent="#accordion\${service.id}">
+                      <div id="collapse\${service.id}" class="accordion-collapse collapse healthCheckAccordion" aria-labelledby="heading\${service.id}" data-bs-parent="#accordion\${service.id}" data-service-id="\${service.id}">
                           <div class="accordion-body">
                               <table class="table table-striped" id="historyTable\${service.id}"></table>
                           </div>
