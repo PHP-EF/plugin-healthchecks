@@ -8,7 +8,7 @@
       "icon": "https://raw.githubusercontent.com/php-ef/plugin-healthchecks/main/logo.png",
       "contact": "https://github.com/php-ef/plugin-healthchecks/issues",
       "link": "https://github.com/php-ef/plugin-healthchecks",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "minimum_php-ef_version": "0.8.8",
       "release_date": "2025-07-17",
       "last_updated": "2025-07-17",
@@ -19,6 +19,13 @@
         "title": "Change Log",
         "data": [
           {
+            "version": "0.0.4",
+            "date": "2025-07-20",
+            "changes": [
+                "Several improvements & bug fixes",
+                "Add initial Health Check page"
+            ]
+          },{
             "version": "0.0.3",
             "date": "2025-07-19",
             "changes": [

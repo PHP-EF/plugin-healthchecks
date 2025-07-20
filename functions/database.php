@@ -45,6 +45,9 @@ trait HealthChecksDatabase {
             ],
             '0.0.3' => [
                 "ALTER TABLE services ADD COLUMN notified BOOLEAN DEFAULT 0",
+            ],
+            '0.0.4' => [
+                "ALTER TABLE history RENAME COLUMN response TO result",
             ]
         ];
     }
@@ -233,11 +236,11 @@ trait HealthChecksDatabase {
     private function saveCheckHistory($result,$service) {
         // Check if state has changed
         if ($service['status'] != $result['status']) {
-            $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, response, error) VALUES (:service_id, :status, :response, :error)");
+            $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, result, error) VALUES (:service_id, :status, :result, :error)");
             $stmt->execute([
                 ':service_id' => $result['id'],
                 ':status' => $result['status'],
-                ':response' => '', //$result['response'] ?? null,
+                ':result' => json_encode($result ?? []),
                 ':error' => $result['error'] ?? null,
             ]);
         }

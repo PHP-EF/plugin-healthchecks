@@ -57,12 +57,24 @@ function healthStatusFormatter(value) {
     }
 }
 
-function convertUTCHealthLastCheckedStringToLocal(utcString) {
-    const [datePart, timePart] = utcString.split(' ');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes, seconds] = timePart.split(':').map(Number);
-    const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
-    return utcDate.toLocaleString();
+function healthHistoryActionFormatter(value, row, index) {
+    return [
+        `<a class="inspect" title="Inspect">`,
+        `<i class="fa fa-search"></i>`,
+        "</a>"
+    ].join("")
+}
+
+window.healthHistoryActionEvents = {
+    "click .inspect": function (e, value, row, index) {
+        if (row.result != "") {
+            var jsonPretty = JSON.stringify(JSON.parse(row.result),null,2);
+        } else {
+            var jsonPretty = "No response data";
+        }
+        document.getElementById("healthCheckResponse").innerHTML = jsonPretty;
+        $("#healthCheckInspectModal").modal("show");
+    }
 }
 
 function loadHealthHistory(serviceId) {
@@ -90,9 +102,8 @@ function loadHealthHistory(serviceId) {
             },
             {
                 title: 'Actions',
-                formatter: function() {
-                    return `<button class="btn btn-primary btn-sm" onclick="inspectHistory(${serviceId})">Inspect</button>`;
-                }
+                formatter: 'healthHistoryActionFormatter',
+                events: 'healthHistoryActionEvents'
             }
         ],
         pagination: true,
