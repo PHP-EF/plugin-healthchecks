@@ -97,7 +97,7 @@ trait HealthChecksServiceChecker {
             $Result['notified'] = false;
         }
 
-        $this->saveCheckHistory($Result);
+        $this->saveCheckHistory($Result,$service);
         return $Result;
     }
 
@@ -119,7 +119,7 @@ trait HealthChecksServiceChecker {
             $Result['status'] = 'unhealthy';
             $Result['error'] = $errstr;
         }
-        $this->saveCheckHistory($Result);
+        $this->saveCheckHistory($Result,$service);
         return $Result;
     }
 
@@ -145,7 +145,7 @@ trait HealthChecksServiceChecker {
             'error_code' => $resultCode,
             'status_message' => $resultCode === 0 ? 'Ping successful' : 'Ping failed'
         ];
-        $this->saveCheckHistory($Result);
+        $this->saveCheckHistory($Result,$service);
         return $Result;
     }
 

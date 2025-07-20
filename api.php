@@ -46,6 +46,17 @@ $app->get('/plugin/healthchecks/services/{id}', function ($request, $response, $
 		->withStatus($GLOBALS['responseCode']);
 });
 
+$app->get('/plugin/healthchecks/services/{id}/history', function ($request, $response, $args) {
+	$healthChecksPlugin = new healthChecksPlugin();
+	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-WRITE'] ?? 'ACL-WRITE')) {
+		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->getServiceHistory($args['id']));
+	}
+	$response->getBody()->write(jsonE($GLOBALS['api']));
+	return $response
+		->withHeader('Content-Type', 'application/json;charset=UTF-8')
+		->withStatus($GLOBALS['responseCode']);
+});
+
 $app->post('/plugin/healthchecks/services', function ($request, $response, $args) {
 	$healthChecksPlugin = new healthChecksPlugin();
 	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-WRITE'] ?? 'ACL-WRITE')) {
@@ -87,7 +98,7 @@ $app->delete('/plugin/healthchecks/services/{id}', function ($request, $response
 		->withStatus($GLOBALS['responseCode']);
 });
 
-$app->get('/plugin/healthchecks/check', function ($request, $response, $args) {
+$app->get('/plugin/healthchecks/check_all', function ($request, $response, $args) {
 	$healthChecksPlugin = new healthChecksPlugin();
 	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-WRITE'] ?? 'ACL-WRITE')) {
 		$healthChecksPlugin->api->setAPIResponse($healthChecksPlugin->checkAll());

@@ -230,14 +230,17 @@ trait HealthChecksDatabase {
     }
 
     // Save a new check history entry
-    private function saveCheckHistory($result) {
-        $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, response, error) VALUES (:service_id, :status, :response, :error)");
-        $stmt->execute([
-            ':service_id' => $result['id'],
-            ':status' => $result['status'],
-            ':response' => '', //$result['response'] ?? null,
-            ':error' => $result['error'] ?? null,
-        ]);
+    private function saveCheckHistory($result,$service) {
+        // Check if state has changed
+        if ($service['status'] != $result['status']) {
+            $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, response, error) VALUES (:service_id, :status, :response, :error)");
+            $stmt->execute([
+                ':service_id' => $result['id'],
+                ':status' => $result['status'],
+                ':response' => '', //$result['response'] ?? null,
+                ':error' => $result['error'] ?? null,
+            ]);
+        }
         $this->saveCheckStatus($result);
     }
 
