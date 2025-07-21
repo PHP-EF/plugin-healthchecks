@@ -42,6 +42,12 @@ trait HealthChecksDatabase {
             '0.0.1' => [],
             '0.0.2' => [
                 "ALTER TABLE services ADD COLUMN schedule TEXT DEFAULT '*/5 * * * *'",
+            ],
+            '0.0.3' => [
+                "ALTER TABLE services ADD COLUMN notified BOOLEAN DEFAULT 0",
+            ],
+            '0.0.4' => [
+                "ALTER TABLE history RENAME COLUMN response TO result",
             ]
         ];
     }
@@ -62,7 +68,8 @@ trait HealthChecksDatabase {
             verify_ssl BOOLEAN DEFAULT 0,
             schedule TEXT DEFAULT '*/5 * * * *', -- Default to every 5 minutes
             last_checked DATETIME,
-            status TEXT
+            status TEXT,
+            notified BOOLEAN DEFAULT 0
         )");
 
         ## Create first example entries in the services table
@@ -106,7 +113,7 @@ trait HealthChecksDatabase {
             service_id INTEGER NOT NULL,
             checked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT,
-            response TEXT,
+            result TEXT,
             error TEXT,
             FOREIGN KEY (service_id) REFERENCES services(id)
         )");
@@ -226,14 +233,17 @@ trait HealthChecksDatabase {
     }
 
     // Save a new check history entry
-    private function saveCheckHistory($result) {
-        $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, response, error) VALUES (:service_id, :status, :response, :error)");
-        $stmt->execute([
-            ':service_id' => $result['id'],
-            ':status' => $result['status'],
-            ':response' => $result['response'] ?? null,
-            ':error' => $result['error'] ?? null
-        ]);
+    private function saveCheckHistory($result,$service) {
+        // Check if state has changed
+        if ($service['status'] != $result['status']) {
+            $stmt = $this->sql->prepare("INSERT INTO history (service_id, status, result, error) VALUES (:service_id, :status, :result, :error)");
+            $stmt->execute([
+                ':service_id' => $result['id'],
+                ':status' => $result['status'],
+                ':result' => json_encode($result ?? []),
+                ':error' => $result['error'] ?? null,
+            ]);
+        }
         $this->saveCheckStatus($result);
     }
 
@@ -242,13 +252,15 @@ trait HealthChecksDatabase {
         $stmt = $this->sql->prepare("
             UPDATE services SET
                 last_checked = datetime('now'),
-                status = :status
+                status = :status,
+                notified = :notified
             WHERE id = :id
         ");
 
         $stmt->execute([
             ':status' => $result['status'],
-            ':id' => $result['id']
+            ':id' => $result['id'],
+            ':notified' => $result['notified'] ?? 0
         ]);
     }
 

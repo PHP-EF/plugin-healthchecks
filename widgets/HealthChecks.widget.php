@@ -53,6 +53,15 @@ class HealthChecksWidget implements WidgetInterface {
 
                 <!-- Use queryAPI to fetch health check data and create the widget content -->
                 <script>
+
+                function convertUTCHealthLastCheckedStringToLocal(utcString) {
+                    const [datePart, timePart] = utcString.split(' ');
+                    const [year, month, day] = datePart.split('-').map(Number);
+                    const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                    const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+                    return utcDate.toLocaleString();
+                }
+
                 function loadHealthData() {
                     queryAPI('GET','/api/plugin/healthchecks/enabled_services').done(function(data) {
                         $('#healthChecks-collapse').html('');
@@ -63,7 +72,8 @@ class HealthChecksWidget implements WidgetInterface {
                                 let serviceType = service.type || 'unknown';
                                 let serviceHost = service.host || 'unknown';
                                 let servicePort = service.port || 'unknown';
-                                let serviceLastChecked = service.last_checked || 'unknown';
+                                // Convert last_checked from UTC to current browser timezone (GMT)
+                                let serviceLastChecked = service.last_checked ? convertUTCHealthLastCheckedStringToLocal(service.last_checked) : 'unknown';
                                 let serviceProtocol = service.protocol || 'http';
                                 let servicePath = service.http_path || '/';
                                 let serviceExpectedStatus = service.http_expected_status || 200;

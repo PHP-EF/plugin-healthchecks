@@ -46,3 +46,68 @@ function addCheckboxValueToFormData(formData, checkboxId, fieldName) {
     const isChecked = $(checkboxId).is(":checked") ? "1" : "0";
     formData.push({ name: fieldName, value: isChecked });
 }
+
+function healthStatusFormatter(value) {
+    if (value === 'healthy') {
+    return '<span class="badge bg-success">Healthy</span>';
+    } else if (value === 'unhealthy') {
+    return '<span class="badge bg-danger">Unhealthy</span>';
+    } else {
+    return '<span class="badge bg-secondary">Unknown</span>';
+    }
+}
+
+function healthHistoryActionFormatter(value, row, index) {
+    return [
+        `<a class="inspect" title="Inspect">`,
+        `<i class="fa fa-search"></i>`,
+        "</a>"
+    ].join("")
+}
+
+window.healthHistoryActionEvents = {
+    "click .inspect": function (e, value, row, index) {
+        if (row.result != "") {
+            var jsonPretty = JSON.stringify(JSON.parse(row.result),null,2);
+        } else {
+            var jsonPretty = "No response data";
+        }
+        document.getElementById("healthCheckResponse").innerHTML = jsonPretty;
+        $("#healthCheckInspectModal").modal("show");
+    }
+}
+
+function loadHealthHistory(serviceId) {
+    let historyElem = '#historyTable' + serviceId;
+    $(historyElem).bootstrapTable('destroy'); // Optional: clear previous table
+    $(historyElem).bootstrapTable({
+        url: `/api/plugin/healthchecks/services/${serviceId}/history`,
+        dataField: 'data',
+        columns: [
+            {
+                field: 'checked_at',
+                title: 'Timestamp',
+                formatter: function(value) {
+                    return convertUTCHealthLastCheckedStringToLocal(value);
+                }
+            },
+            {
+                field: 'status',
+                title: 'Status',
+                formatter: 'healthStatusFormatter'
+            },
+            {
+                field: 'error',
+                title: 'Error(s)'
+            },
+            {
+                title: 'Actions',
+                formatter: 'healthHistoryActionFormatter',
+                events: 'healthHistoryActionEvents'
+            }
+        ],
+        pagination: true,
+        search: true,
+        showRefresh: true
+    });
+}
