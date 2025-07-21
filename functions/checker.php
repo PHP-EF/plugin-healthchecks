@@ -173,6 +173,15 @@ trait HealthChecksServiceChecker {
         $status = strtolower($result['status']);
         $NotificationBody = "The service <b>" . htmlspecialchars($result['name']) . "</b> is <b>" . htmlspecialchars($result['status']) . "</b>.<br><br>" . $NotificationDetails;
 
+        // Check if Health Checks Page is added to Pages and website Url is populated, if so, these can be used as the Url in notifications
+        $HealthChecksPage = $this->pages->getPageByUrl('plugin/Health Checks/healthchecks') ?? null;
+        $WebsiteUrl = $this->config->get('System', 'websiteURL') ?? null;
+        $UrlEnabled = false;
+        if ($HealthChecksPage && $WebsiteUrl) {
+            $UrlEnabled = true;
+            $HealthChecksPageUrl = $WebsiteUrl . '/?page=' . $HealthChecksPage['Name'];
+        }
+
         // SMTP Notification
         if (isset($this->pluginConfig['smtpEnable']) && $this->pluginConfig['smtpEnable'] == true) {
             if (isset($this->pluginConfig['smtpFrom']) && !empty($this->pluginConfig['smtpFrom'])) {
@@ -221,14 +230,16 @@ trait HealthChecksServiceChecker {
             } else {
                 $Pushover->setPriority(0); // Normal priority for healthy status
             }
-            
+           
             $NotificationHeader = $emoji.' '.$NotificationHeader;
 
             $Pushover->setTitle($NotificationHeader);
             $Pushover->setMessage($NotificationBody);
             $Pushover->setHtml(1);
-            $Pushover->setUrl(($this->config->get('System', 'websiteURL') ?? '') . '/');
-            $Pushover->setUrlTitle('View Health Check Status');
+            if ($UrlEnabled) {
+                $Pushover->setUrl($HealthChecksPageUrl);
+                $Pushover->setUrlTitle('View Health Check Status');
+            }
             $Pushover->setTimestamp(time());
             // $Pushover->setDebug(true);
             // $Pushover->setCallback('https://example.com/'); // Notification callback URL
