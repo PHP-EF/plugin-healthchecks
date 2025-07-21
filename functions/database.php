@@ -48,7 +48,8 @@ trait HealthChecksDatabase {
             ],
             '0.0.4' => [
                 "ALTER TABLE history RENAME COLUMN response TO result",
-            ]
+            ],
+            '0.0.5' => []
         ];
     }
 
