@@ -74,6 +74,7 @@ trait HealthChecksServiceChecker {
             'host' => $service['host'],
             'port' => $service['port'],
             'timeout' => $service['timeout'] ?: 5,
+            'priority' => $service['priority'],
             'status' => $status,
             'http_expected_status' => $service['http_expected_status'],
             'http_code' => $httpCode,
@@ -111,6 +112,7 @@ trait HealthChecksServiceChecker {
             'host' => $service['host'],
             'port' => $service['port'],
             'timeout' => $timeout,
+            'priority' => $service['priority']
         ];
         if ($fp) {
             fclose($fp);
@@ -140,6 +142,7 @@ trait HealthChecksServiceChecker {
             'type' => $service['type'],
             'host' => $service['host'],
             'timeout' => $service['timeout'] ?: 5,
+            'priority' => $service['priority'],
             'status' => $resultCode === 0 ? 'healthy' : 'unhealthy',
             'response' => implode("\n", $output),
             'error_code' => $resultCode,
@@ -201,15 +204,22 @@ trait HealthChecksServiceChecker {
 
             $message = "The service {$result['name']} is {$result['status']}.\n\nDetails:\n<ul>$details</ul>";
 
+            if ($result['status'] == 'unhealthy') {
+                $Pushover->setPriority($result['priority'] ?? 0); // Set priority based on service priority
+                if ($result['priority'] == 2) {
+                    $Pushover->setRetry($this->pluginConfig['pushoverRetry']); //Used with Priority = 2; Pushover will resend the notification every 60 seconds until the user accepts.
+                    $Pushover->setExpire($this->pluginConfig['pushoverExpire']); //Used with Priority = 2; Pushover will resend the notification every 60 seconds for 3600 seconds. After that point, it stops sending notifications.
+                }
+            } else {
+                $Pushover->setPriority(0); // Normal priority for healthy status
+            }
+            
             $Pushover->setMessage($message);
             $Pushover->setHtml(1);
             $Pushover->setUrl(($this->config->get('System', 'websiteURL') ?? '') . '/');
             $Pushover->setUrlTitle('View Health Check Status');
-            $Pushover->setPriority($this->pluginConfig['pushoverPriority'] ?? 0);
             $Pushover->setTimestamp(time());
             // $Pushover->setDebug(true);
-            // $Pushover->setRetry(60); //Used with Priority = 2; Pushover will resend the notification every 60 seconds until the user accepts.
-            // $Pushover->setExpire(3600); //Used with Priority = 2; Pushover will resend the notification every 60 seconds for 3600 seconds. After that point, it stops sending notifications.
             // $Pushover->setCallback('https://example.com/'); // Notification callback URL
             // $Pushover->setSound('bike');
             $Pushover->send();

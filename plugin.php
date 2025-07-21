@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.0.7', // SemVer of plugin
+	'version' => '0.0.8', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -105,6 +105,11 @@ class healthChecksPlugin extends phpef {
                 'dataAttributes' => ['sortable' => 'true', 'visible' => 'false'],
 			],
 			[
+				'field' => 'priority',
+				'title' => 'Priority',
+                'dataAttributes' => ['sortable' => 'true', 'visible' => 'false', 'formatter' => 'priorityFormatter'],
+			],
+			[
 				'field' => 'enabled',
 				'title' => 'Enabled',
                 'dataAttributes' => ['sortable' => 'true', 'formatter' => 'booleanTickCrossFormatter'],
@@ -143,17 +148,13 @@ class healthChecksPlugin extends phpef {
             ),
             "Pushover" => array(
 				$this->settingsOption('checkbox', 'pushoverEnable', ['label' => 'Enable Pushover Notifications', 'help' => 'Enable to send pushover notifications for service status changes.']),
-				$this->settingsOption('select','pushoverPriority', [
-					'label' => 'Pushover Priority',
-					'options' => [
-						['name' => 'Normal', 'value' => 0],
-						['name' => 'High', 'value' => 1],
-						['name' => 'Emergency', 'value' => 2]
-					],
-					'help' => 'The priority of the Pushover notification. Normal is the default, High will send a notification immediately, and Emergency will resend until acknowledged.'
-				]),
+				$this->settingsOption('blank'),
 				$this->settingsOption('password-alt', 'pushoverApiToken', ['label' => 'Pushover API Token', 'help' => 'The Pushover API Token to use for sending notifications. This will default to the globally configured API Token if not set.', 'placeholder' => '']),
-				$this->settingsOption('password-alt', 'pushoverUserKey', ['label' => 'Pushover User Key', 'help' => 'The Pushover User Key to send notifications to. This will default to the globally configured User Key if not set.', 'placeholder' => ''])
+				$this->settingsOption('password-alt', 'pushoverUserKey', ['label' => 'Pushover User Key', 'help' => 'The Pushover User Key to send notifications to. This will default to the globally configured User Key if not set.', 'placeholder' => '']),
+				$this->settingsOption('hr'),
+				$this->settingsOption('title','criticalNotifications',['text' => 'Critical Notifications']),
+				$this->settingsOption('number', 'pushoverRetry', ['label' => 'Retry Interval (seconds)', 'help' => 'The interval in seconds to retry sending Critical notifications upon failure. This will default to 60 seconds if not set.', 'placeholder' => '60']),
+				$this->settingsOption('number', 'pushoverExpire', ['label' => 'Expiration Time (seconds)', 'help' => 'The time in seconds after which Critical the notification will expire. This will default to 3600 seconds if not set.', 'placeholder' => '3600']),
             ),
 			"Webhooks (Not Implemented)" => array(
 			)
@@ -227,6 +228,17 @@ class healthChecksPlugin extends phpef {
 													<option value="web">Web</option>
 													<option value="tcp">TCP</option>
 													<option value="icmp">ICMP</option>
+												</select>
+											</div>
+											<div class="col-md-6 pb-2">
+												<label for="servicePriority" class="form-label">Priority</label>
+												<select class="form-select" id="servicePriority" name="priority" required>
+													<option disabled>Select Service Priority</option>
+													<option value="-2">Very Low</option>
+													<option value="-1">Low</option>
+													<option value="0">Normal</option>
+													<option value="1">High</option>
+													<option value="2">Critical</option>
 												</select>
 											</div>
 											<div class="col-md-6 pb-2">
