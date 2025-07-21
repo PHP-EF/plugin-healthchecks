@@ -14,6 +14,8 @@ trait HealthChecksGeneral {
         $this->pluginConfig['defaultSort'] = $this->pluginConfig['defaultSort'] ?? 'name';
         $this->pluginConfig['defaultSortOrder'] = $this->pluginConfig['defaultSortOrder'] ?? 'asc';
         $this->pluginConfig['sortUnhealthyFirst'] = $this->pluginConfig['sortUnhealthyFirst'] ?? false;
+        $this->pluginConfig['pushoverRetry'] = $this->pluginConfig['pushoverRetry'] ?? 60;
+        $this->pluginConfig['pushoverExpire'] = $this->pluginConfig['pushoverExpire'] ?? 3600;
     }
 
     public function buildSortMenu() {

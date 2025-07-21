@@ -15,6 +15,8 @@ function loadServiceConfiguration(row) {
     $("#healthChecksServiceForm").find("input[name=\"http_path\"]").val(row.http_path);
     $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").val(row.http_expected_status);
     $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").prop( "checked", (row.verify_ssl ? true : false) );
+    $("#healthChecksServiceForm").find("select[name=\"priority\"]").val(row.priority);
+    console.log(row.priority);
     hideOrShowFields(row.type);
 }
 
@@ -54,6 +56,23 @@ function healthStatusFormatter(value) {
     return '<span class="badge bg-danger">Unhealthy</span>';
     } else {
     return '<span class="badge bg-secondary">Unknown</span>';
+    }
+}
+
+function priorityFormatter(value) {
+    switch(value) {
+        case -2:
+            return '<span class="badge bg-primary">Very Low</span>';
+        case -1:
+            return '<span class="badge bg-info">Low</span>';
+        case 0:
+            return '<span class="badge bg-secondary">Normal</span>';
+        case 1:
+            return '<span class="badge bg-warning">High</span>';
+        case 2:
+            return '<span class="badge bg-danger">Critical</span>';
+        default:
+            return '<span class="badge bg-secondary">Normal</span>';
     }
 }
 

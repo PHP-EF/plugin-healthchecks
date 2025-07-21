@@ -52,7 +52,9 @@ trait HealthChecksDatabase {
             '0.0.5' => [],
             '0.0.6' => [],
             '0.0.7' => [],
-            '0.0.8' => [],
+            '0.0.8' => [
+                'ALTER TABLE services ADD COLUMN priority INTEGER DEFAULT 0',
+            ],
             '0.0.9' => [],
             '0.1.0' => []
         ];
@@ -75,6 +77,7 @@ trait HealthChecksDatabase {
             schedule TEXT DEFAULT '*/5 * * * *', -- Default to every 5 minutes
             last_checked DATETIME,
             status TEXT,
+            priority INTEGER DEFAULT 0,
             notified BOOLEAN DEFAULT 0
         )");
 
@@ -177,7 +180,7 @@ trait HealthChecksDatabase {
 
     // Create a new service in the database
     public function createService($data) {
-        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_path, timeout, schedule, http_expected_status, verify_ssl) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_path, :timeout, :schedule, :http_expected_status, :verify_ssl)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_path, timeout, schedule, priority, http_expected_status, verify_ssl) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_path, :timeout, :schedule, :priority, :http_expected_status, :verify_ssl)");
         switch($data['type']) {
             case 'icmp':
                 $data['protocol'] = 'icmp'; // Set protocol to ICMP
@@ -203,6 +206,7 @@ trait HealthChecksDatabase {
             ':http_path' => $data['http_path'] ?? null,
             ':timeout' => $data['timeout'] ?: 5,
             ':schedule' => $data['schedule'] ?: '*/5 * * * *',
+            ':priority' => $data['priority'] ?: 0,
             ':http_expected_status' => $data['http_expected_status'] ?? null,
             ':verify_ssl' => $data['verify_ssl'] ?? 0
         ]);
@@ -211,7 +215,7 @@ trait HealthChecksDatabase {
 
     // Update a service in the database
     public function updateService($id, $data) {
-        $stmt = $this->sql->prepare("UPDATE services SET name = :name, enabled = :enabled, type = :type, host = :host, port = :port, protocol = :protocol, http_path = :http_path, timeout = :timeout, schedule = :schedule, http_expected_status = :http_expected_status, verify_ssl = :verify_ssl WHERE id = :id");
+        $stmt = $this->sql->prepare("UPDATE services SET name = :name, enabled = :enabled, type = :type, host = :host, port = :port, protocol = :protocol, http_path = :http_path, timeout = :timeout, schedule = :schedule, priority = :priority, http_expected_status = :http_expected_status, verify_ssl = :verify_ssl WHERE id = :id");
         switch($data['type']) {
             case 'icmp':
                 $data['protocol'] = 'icmp'; // Set protocol to ICMP
@@ -239,6 +243,7 @@ trait HealthChecksDatabase {
             ':http_path' => $data['http_path'] ?? null,
             ':timeout' => $data['timeout'] ?: 5,
             ':schedule' => $data['schedule'] ?: '*/5 * * * *',
+            ':priority' => $data['priority'] ?: 0,
             ':http_expected_status' => $data['http_expected_status'] ?? null,
             ':verify_ssl' => $data['verify_ssl'] ?? 0,
         ]);
