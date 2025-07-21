@@ -79,7 +79,6 @@ class HealthChecksWidget implements WidgetInterface {
                 function loadHealthData() {
                     queryAPI('GET','/api/plugin/healthchecks/enabled_services?sort=$defaultSort&order=$defaultSortOrder').done(function(data) {
                         var sortUnhealthyFirst = $sortUnhealthyFirst;
-                        console.log(sortUnhealthyFirst);
                         $('#healthChecks-collapse').html('');
                         if (data.data && data.data.length > 0) {
                             if (sortUnhealthyFirst) {

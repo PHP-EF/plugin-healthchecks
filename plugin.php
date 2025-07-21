@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.0.6', // SemVer of plugin
+	'version' => '0.0.7', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -25,7 +25,7 @@ class healthChecksPlugin extends phpef {
 	HealthChecksDatabase,
 	HealthChecksServiceChecker;
 
-    private $pluginConfig;
+    public $pluginConfig;
     private $sql;
     private $sqlHelper;
 
@@ -387,6 +387,7 @@ class healthChecksPlugin extends phpef {
 				$this->settingsOption('auth', 'ACL-WRITE', ['label' => 'Plugin Admin ACL', 'help' => 'This ACL is used to determine who can manage the Health Checks plugin.']),
 				$this->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $this->buildSortMenu(), 'help' => 'The default sort field for the health checks page and settings. The widget sort field is set in the widget settings.']),
 				$this->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'The default sort order for the health checks page and settings. The widget sort order is set in the widget settings.']),
+				$this->settingsOption('checkbox', 'sortUnhealthyFirst', ['label' => 'Always show unhealthy services first', 'help' => 'Always display unhealthy services first for the health checks page and settings, regardless of the default sort option. The widget has its own setting is set in the widget configuration.']),
 			),
 			'Health Checks' => array(
 				$this->settingsOption('bootstrap-table', 'HealthChecksTable', ['id' => 'HealthChecksTable', 'columns' => $HealthChecksTableColumns, 'dataAttributes' => $HealthChecksTableAttributes, 'width' => '12']),

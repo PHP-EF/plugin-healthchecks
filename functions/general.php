@@ -13,6 +13,7 @@ trait HealthChecksGeneral {
         $this->pluginConfig = $this->config->get('Plugins', 'Health Checks');
         $this->pluginConfig['defaultSort'] = $this->pluginConfig['defaultSort'] ?? 'name';
         $this->pluginConfig['defaultSortOrder'] = $this->pluginConfig['defaultSortOrder'] ?? 'asc';
+        $this->pluginConfig['sortUnhealthyFirst'] = $this->pluginConfig['sortUnhealthyFirst'] ?? false;
     }
 
     public function buildSortMenu() {
