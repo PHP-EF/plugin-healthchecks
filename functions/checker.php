@@ -209,9 +209,12 @@ trait HealthChecksServiceChecker {
                 $Pushover->setUser($globalPushoverUserKey);
             }
 
+            $emoji = ($status === 'healthy') ? '✅' : (($status === 'unhealthy') ? '❌' : '⚠️');
+
             if ($result['status'] == 'unhealthy') {
                 $Pushover->setPriority($result['priority'] ?? 0); // Set priority based on service priority
                 if ($result['priority'] == 2) {
+                    $emoji = '‼️';
                     $Pushover->setRetry($this->pluginConfig['pushoverRetry']); //Used with Priority = 2; Pushover will resend the notification every 60 seconds until the user accepts.
                     $Pushover->setExpire($this->pluginConfig['pushoverExpire']); //Used with Priority = 2; Pushover will resend the notification every 60 seconds for 3600 seconds. After that point, it stops sending notifications.
                 }
@@ -219,7 +222,6 @@ trait HealthChecksServiceChecker {
                 $Pushover->setPriority(0); // Normal priority for healthy status
             }
             
-            $emoji = ($status === 'healthy') ? '✅' : (($status === 'unhealthy') ? '❌' : '⚠️');
             $NotificationHeader = $emoji.' '.$NotificationHeader;
 
             $Pushover->setTitle($NotificationHeader);
