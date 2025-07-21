@@ -6,6 +6,7 @@
   }
   $defaultSort = $healthChecksPlugin->pluginConfig['defaultSort'];
   $defaultSortOrder = $healthChecksPlugin->pluginConfig['defaultSortOrder'];
+  $sortUnhealthyFirst = $healthChecksPlugin->pluginConfig['sortUnhealthyFirst'] ? 'true' : 'false';
   return <<<EOF
   <section class="section">
     <div class="row">
@@ -86,6 +87,16 @@
       queryAPI('GET','/api/plugin/healthchecks/enabled_services?sort=$defaultSort&order=$defaultSortOrder').done(function(data) {
       let content = '';
       if (data.data && data.data.length > 0) {
+        var sortUnhealthyFirst = $sortUnhealthyFirst;
+        $('#healthChecks-collapse').html('');
+        if (data.data && data.data.length > 0) {
+          if (sortUnhealthyFirst) {
+              data.data.sort(function(a, b) {
+                  if (a.status === 'unhealthy' && b.status !== 'unhealthy') return -1;
+                  if (b.status === 'unhealthy' && a.status !== 'unhealthy') return 1;
+                  return a.name.localeCompare(b.name);
+              });
+          }
           data.data.forEach(service => {
               const lastChecked = convertUTCHealthLastCheckedStringToLocal(service.last_checked);
               let serviceName = service.name || 'Unknown Service';
@@ -110,6 +121,7 @@
                   </div>
               </div>`;
           });
+        }
       } else {
           content = '<p>No health checks available.</p>';
       }
