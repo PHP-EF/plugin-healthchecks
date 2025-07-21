@@ -157,6 +157,22 @@ trait HealthChecksServiceChecker {
             return; // Skip sending if already notified and sendOnce is true
         }
 
+        $NotificationHeader = "";
+        if ($result['priority'] > 0) {
+            $NotificationHeader .= "(".$this->getPriorityText($result['priority']).") - ";
+        }
+        $NotificationHeader .= $result['name']." - ".ucfirst($result['status']);
+
+        $NotificationDetails = "<b>Notification Details:</b><br><ul style='margin:0; padding-left:15px;'>";
+        foreach ($result as $key => $value) {
+            if ($key !== "response") {
+                $NotificationDetails .= "<li><b>" . htmlspecialchars($key) . ":</b> " . nl2br(htmlspecialchars($value)) . "</li>";
+            }
+        }
+        $NotificationDetails .= "</ul>";
+        $status = strtolower($result['status']);
+        $NotificationBody = "The service <b>" . htmlspecialchars($result['name']) . "</b> is <b>" . htmlspecialchars($result['status']) . "</b>.<br><br>" . $NotificationDetails;
+
         // SMTP Notification
         if (isset($this->pluginConfig['smtpEnable']) && $this->pluginConfig['smtpEnable'] == true) {
             if (isset($this->pluginConfig['smtpFrom']) && !empty($this->pluginConfig['smtpFrom'])) {
@@ -172,8 +188,8 @@ trait HealthChecksServiceChecker {
             }
             $this->notifications->sendSmtpEmail(
                 $smtpTo,
-                "Service Alert: {$result['name']} - {$result['status']}",
-                "The service {$result['name']} is {$result['status']}.\n\nDetails:\n" . json_encode($result)
+                $NotificationHeader,
+                $NotificationBody
             );
         }
 
@@ -193,16 +209,7 @@ trait HealthChecksServiceChecker {
                 $Pushover->setUser($globalPushoverUserKey);
             }
 
-            $Pushover->setTitle("Service Alert: {$result['name']} - {$result['status']}");
-
-            $details = "";
-            foreach ($result as $key => $value) {
-                if ($key != "response") {
-                    $details .= "<li><strong>" . htmlspecialchars($key) . ":</strong> " . htmlspecialchars($value) . "</li>";
-                }
-            }
-
-            $message = "The service {$result['name']} is {$result['status']}.\n\nDetails:\n<ul>$details</ul>";
+            $Pushover->setTitle($NotificationHeader);
 
             if ($result['status'] == 'unhealthy') {
                 $Pushover->setPriority($result['priority'] ?? 0); // Set priority based on service priority
@@ -214,7 +221,10 @@ trait HealthChecksServiceChecker {
                 $Pushover->setPriority(0); // Normal priority for healthy status
             }
             
-            $Pushover->setMessage($message);
+            $emoji = ($status === 'healthy') ? '✅' : (($status === 'unhealthy') ? '❌' : '⚠️');
+            $NotificationBody = $emoji.'&nbsp;'.$NotificationBody;
+
+            $Pushover->setMessage($NotificationBody);
             $Pushover->setHtml(1);
             $Pushover->setUrl(($this->config->get('System', 'websiteURL') ?? '') . '/');
             $Pushover->setUrlTitle('View Health Check Status');

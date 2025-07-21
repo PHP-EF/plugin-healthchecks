@@ -28,4 +28,21 @@ trait HealthChecksGeneral {
         }
         return $sortOptions;
     }
+
+    public function getPriorityText($priorityId) {
+        switch($priorityId) {
+            case '-2':
+                return 'Very Low';
+            case '-1':
+                return 'Low';
+            case '0':
+                return 'Normal';
+            case '1':
+                return 'High';
+            case '2':
+                return 'Critical';
+            default:
+                return 'Unknown';
+        }
+    }
 }
