@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.0.4', // SemVer of plugin
+	'version' => '0.0.5', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -18,11 +18,6 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 // Include Health Checks Functions
 foreach (glob(__DIR__.'/functions/*.php') as $function) {
     require_once $function; // Include each PHP file
-}
-
-// Include Health Checks Widgets
-foreach (glob(__DIR__.'/widgets/*.php') as $widget) {
-    require_once $widget; // Include each PHP file
 }
 
 class healthChecksPlugin extends phpef {
@@ -126,8 +121,8 @@ class healthChecksPlugin extends phpef {
 		$HealthChecksTableAttributes['show-refresh'] = 'true';
 		$HealthChecksTableAttributes['pagination'] = 'true';
 		$HealthChecksTableAttributes['toolbar'] = '#toolbar';
-		$HealthChecksTableAttributes['sort-name'] = 'datetime';
-		$HealthChecksTableAttributes['sort-order'] = 'asc';
+		$HealthChecksTableAttributes['sort-name'] = $this->pluginConfig['defaultSort'];
+		$HealthChecksTableAttributes['sort-order'] = $this->pluginConfig['defaultSortOrder'];
 		$HealthChecksTableAttributes['show-columns'] = 'true';
 		$HealthChecksTableAttributes['page-size'] = '25';
 
@@ -389,6 +384,8 @@ class healthChecksPlugin extends phpef {
 			'Plugin Settings' => array(
 				$this->settingsOption('auth', 'ACL-READ', ['label' => 'Plugin User ACL', 'help' => 'This ACL is used to determine who can query the health of services. (Required for viewing the widget)']),
 				$this->settingsOption('auth', 'ACL-WRITE', ['label' => 'Plugin Admin ACL', 'help' => 'This ACL is used to determine who can manage the Health Checks plugin.']),
+				$this->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $this->buildSortMenu(), 'help' => 'The default sort field for the health checks page and settings. The widget sort field is set in the widget settings.']),
+				$this->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'The default sort order for the health checks page and settings. The widget sort order is set in the widget settings.']),
 			),
 			'Health Checks' => array(
 				$this->settingsOption('bootstrap-table', 'HealthChecksTable', ['id' => 'HealthChecksTable', 'columns' => $HealthChecksTableColumns, 'dataAttributes' => $HealthChecksTableAttributes, 'width' => '12']),
@@ -401,4 +398,9 @@ class healthChecksPlugin extends phpef {
 			)
 		);
 	}
+}
+
+// Include Health Checks Widgets
+foreach (glob(__DIR__.'/widgets/*.php') as $widget) {
+    require_once $widget; // Include each PHP file
 }

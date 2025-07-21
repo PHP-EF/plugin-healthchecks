@@ -4,6 +4,8 @@
     $ib->api->setAPIResponse('Error','Unauthorized',401);
     return false;
   }
+  $defaultSort = $healthChecksPlugin->pluginConfig['defaultSort'];
+  $defaultSortOrder = $healthChecksPlugin->pluginConfig['defaultSortOrder'];
   return <<<EOF
   <section class="section">
     <div class="row">
@@ -81,7 +83,7 @@
 
     // Use queryAPI to fetch health check data and populate the content
     function fetchHealthChecks() {
-      queryAPI('GET','/api/plugin/healthchecks/enabled_services').done(function(data) {
+      queryAPI('GET','/api/plugin/healthchecks/enabled_services?sort=$defaultSort&order=$defaultSortOrder').done(function(data) {
       let content = '';
       if (data.data && data.data.length > 0) {
           data.data.forEach(service => {

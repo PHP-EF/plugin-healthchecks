@@ -11,5 +11,18 @@ trait HealthChecksGeneral {
 
     private function loadConfig() {
         $this->pluginConfig = $this->config->get('Plugins', 'Health Checks');
+        $this->pluginConfig['defaultSort'] = $this->pluginConfig['defaultSort'] ?? 'name';
+        $this->pluginConfig['defaultSortOrder'] = $this->pluginConfig['defaultSortOrder'] ?? 'asc';
+    }
+
+    public function buildSortMenu() {
+        $sortOptions = array();
+        foreach ($this->validServiceSorts as $sort) {
+            $sortOptions[] = array(
+                'name' => ucfirst(str_replace('_', ' ', $sort)),
+                'value' => $sort
+            );
+        }
+        return $sortOptions;
     }
 }

@@ -16,7 +16,10 @@ $app->get('/plugin/healthchecks/settings', function ($request, $response, $args)
 $app->get('/plugin/healthchecks/enabled_services', function ($request, $response, $args) {
 	$healthChecksPlugin = new healthChecksPlugin();
 	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-READ'] ?? 'ACL-READ')) {
-		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->getEnabledServices());
+		$data = $request->getQueryParams();
+		$sort = $data['sort'] ?? 'name';
+		$order = $data['order'] ?? 'asc';
+		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->getEnabledServices($sort,$order));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -27,7 +30,10 @@ $app->get('/plugin/healthchecks/enabled_services', function ($request, $response
 $app->get('/plugin/healthchecks/services', function ($request, $response, $args) {
 	$healthChecksPlugin = new healthChecksPlugin();
 	if ($healthChecksPlugin->auth->checkAccess($healthChecksPlugin->auth->checkAccess('Plugins','Health Checks')['ACL-WRITE'] ?? 'ACL-WRITE')) {
-		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->getServices());
+		$data = $request->getQueryParams();
+		$sort = $data['sort'] ?? 'name';
+		$order = $data['order'] ?? 'asc';
+		$healthChecksPlugin->api->setAPIResponseData($healthChecksPlugin->getServices($sort,$order));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
