@@ -48,7 +48,8 @@ trait HealthChecksDatabase {
             ],
             '0.0.4' => [
                 "ALTER TABLE history RENAME COLUMN response TO result",
-            ]
+            ],
+            '0.0.5' => []
         ];
     }
 
@@ -127,9 +128,22 @@ trait HealthChecksDatabase {
         $this->sql->exec('INSERT INTO options (Key,Value) VALUES ("dbVersion","'.$GLOBALS['plugins']['Health Checks']['version'].'");');
     }
 
+    public $validServiceSorts = ['name', 'type', 'host', 'port', 'protocol', 'status', 'enabled', 'last_checked'];
+
+    private function validateSort($sort,$order) {
+        if (!in_array($sort, $this->validServiceSorts)) {
+            $sort = 'name';
+        }
+        if ($order !== 'asc' && $order !== 'desc') {
+            $order = 'asc';
+        }
+        return [$sort, $order];
+    }
+
     // Get a list of Services from Database
-    public function getServices() {
-        $stmt = $this->sql->prepare("SELECT * FROM services");
+    public function getServices($sort = 'name', $order = 'asc') {
+        list($sort, $order) = $this->validateSort($sort, $order);
+        $stmt = $this->sql->prepare("SELECT * FROM services ORDER BY $sort $order");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -142,8 +156,9 @@ trait HealthChecksDatabase {
     }
 
     // Get enabled Services from Database
-    public function getEnabledServices() {
-        $stmt = $this->sql->prepare("SELECT * FROM services WHERE enabled = 1");
+    public function getEnabledServices($sort = 'name', $order = 'asc') {
+        list($sort, $order) = $this->validateSort($sort, $order);
+        $stmt = $this->sql->prepare("SELECT * FROM services WHERE enabled = 1 ORDER BY $sort $order");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

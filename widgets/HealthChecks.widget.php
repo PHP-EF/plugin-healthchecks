@@ -10,6 +10,7 @@ class HealthChecksWidget implements WidgetInterface {
     }
 
     public function settings() {
+        $HealthChecks = new healthChecksPlugin();
         $customHTMLQty = 5;
         $SettingsArr = [];
         $SettingsArr['info'] = [
@@ -23,6 +24,8 @@ class HealthChecksWidget implements WidgetInterface {
 				$this->phpef->settingsOption('auth', 'auth', ['label' => 'Role Required']),
                 $this->phpef->settingsOption('checkbox', 'headerEnabled', ['label' => 'Enable Header', 'attr' => 'checked']),
                 $this->phpef->settingsOption('input', 'header', ['label' => 'Header Title', 'placeholder' => 'Health Checks']),
+                $this->phpef->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $HealthChecks->buildSortMenu(), 'help' => 'Default sort field for the health checks on the dashboard.']),
+                $this->phpef->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'Default sort order for the health checks on the dashboard.']),
             ]
         ];
         return $SettingsArr;
@@ -32,8 +35,10 @@ class HealthChecksWidget implements WidgetInterface {
         $WidgetConfig = $this->phpef->config->get('Widgets','Health Checks') ?? [];
         $WidgetConfig['enabled'] = $WidgetConfig['enabled'] ?? false;
         $WidgetConfig['auth'] = $WidgetConfig['auth'] ?? 'ACL-HEALTHCHECKS';
-        $WidgetConfig['headerEnabled'] = $this->widgetConfig['headerEnabled'] ?? true;
-        $WidgetConfig['header'] = $this->widgetConfig['header'] ?? 'Health Checks';
+        $WidgetConfig['headerEnabled'] = $WidgetConfig['headerEnabled'] ?? true;
+        $WidgetConfig['header'] = $WidgetConfig['header'] ?? 'Health Checks';
+        $WidgetConfig['defaultSort'] = $WidgetConfig['defaultSort'] ?? 'status';
+        $WidgetConfig['defaultSortOrder'] = $WidgetConfig['defaultSortOrder'] ?? 'asc';
         return $WidgetConfig;
     }
 
@@ -49,6 +54,12 @@ class HealthChecksWidget implements WidgetInterface {
                     <hr class="hr-alt ml-2">
                 </div>
                 <div class="panel-collapse collapse show" id="healthChecks-collapse" aria-labelledby="healthChecks-heading" role="tabpanel" aria-expanded="true" style="">
+                EOF;
+            }
+
+            $defaultSort = $this->widgetConfig['defaultSort'];
+            $defaultSortOrder = $this->widgetConfig['defaultSortOrder'];
+            $output .= <<<EOF
                 </div>
 
                 <!-- Use queryAPI to fetch health check data and create the widget content -->
@@ -63,7 +74,7 @@ class HealthChecksWidget implements WidgetInterface {
                 }
 
                 function loadHealthData() {
-                    queryAPI('GET','/api/plugin/healthchecks/enabled_services').done(function(data) {
+                    queryAPI('GET','/api/plugin/healthchecks/enabled_services?sort=$defaultSort&order=$defaultSortOrder').done(function(data) {
                         $('#healthChecks-collapse').html('');
                         if (data.data && data.data.length > 0) {
                             data.data.forEach(function(service) {
@@ -127,7 +138,6 @@ class HealthChecksWidget implements WidgetInterface {
                 refreshHealthData();
                 </script>
                 EOF;
-            }
 
             return $output;
         }
