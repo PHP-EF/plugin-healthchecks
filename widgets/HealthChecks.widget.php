@@ -24,6 +24,7 @@ class HealthChecksWidget implements WidgetInterface {
 				$this->phpef->settingsOption('auth', 'auth', ['label' => 'Role Required']),
                 $this->phpef->settingsOption('checkbox', 'headerEnabled', ['label' => 'Enable Header', 'attr' => 'checked']),
                 $this->phpef->settingsOption('input', 'header', ['label' => 'Header Title', 'placeholder' => 'Health Checks']),
+                $this->phpef->settingsOption('checkbox', 'sortUnhealthyFirst', ['label' => 'Always show unhealthy services first', 'help' => 'Always display unhealthy services first on the widget, regardless of the default sort option.']),
                 $this->phpef->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $HealthChecks->buildSortMenu(), 'help' => 'Default sort field for the health checks on the dashboard.']),
                 $this->phpef->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'Default sort order for the health checks on the dashboard.']),
             ]
@@ -37,6 +38,7 @@ class HealthChecksWidget implements WidgetInterface {
         $WidgetConfig['auth'] = $WidgetConfig['auth'] ?? 'ACL-HEALTHCHECKS';
         $WidgetConfig['headerEnabled'] = $WidgetConfig['headerEnabled'] ?? true;
         $WidgetConfig['header'] = $WidgetConfig['header'] ?? 'Health Checks';
+        $WidgetConfig['sortUnhealthyFirst'] = $WidgetConfig['sortUnhealthyFirst'] ?? false;
         $WidgetConfig['defaultSort'] = $WidgetConfig['defaultSort'] ?? 'status';
         $WidgetConfig['defaultSortOrder'] = $WidgetConfig['defaultSortOrder'] ?? 'asc';
         return $WidgetConfig;
@@ -59,6 +61,7 @@ class HealthChecksWidget implements WidgetInterface {
 
             $defaultSort = $this->widgetConfig['defaultSort'];
             $defaultSortOrder = $this->widgetConfig['defaultSortOrder'];
+            $sortUnhealthyFirst = $this->widgetConfig['sortUnhealthyFirst'] ? 'true' : 'false';
             $output .= <<<EOF
                 </div>
 
@@ -75,8 +78,17 @@ class HealthChecksWidget implements WidgetInterface {
 
                 function loadHealthData() {
                     queryAPI('GET','/api/plugin/healthchecks/enabled_services?sort=$defaultSort&order=$defaultSortOrder').done(function(data) {
+                        var sortUnhealthyFirst = $sortUnhealthyFirst;
+                        console.log(sortUnhealthyFirst);
                         $('#healthChecks-collapse').html('');
                         if (data.data && data.data.length > 0) {
+                            if (sortUnhealthyFirst) {
+                                data.data.sort(function(a, b) {
+                                    if (a.status === 'unhealthy' && b.status !== 'unhealthy') return -1;
+                                    if (b.status === 'unhealthy' && a.status !== 'unhealthy') return 1;
+                                    return a.name.localeCompare(b.name);
+                                });
+                            }
                             data.data.forEach(function(service) {
                                 let serviceStatus = service.status || 'unknown';
                                 let serviceName = service.name || 'Unknown Service';
