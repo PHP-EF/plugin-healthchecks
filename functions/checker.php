@@ -163,7 +163,7 @@ trait HealthChecksServiceChecker {
         }
         $NotificationHeader .= $result['name']." - ".ucfirst($result['status']);
 
-        $NotificationDetails = "<b>Notification Details:</b><br><ul style='margin:0; padding-left:15px;'>";
+        $NotificationDetails = "\r\n\r\n<b>Health Check Details:</b><br><ul style='margin:0; padding-left:15px;'>";
         foreach ($result as $key => $value) {
             if ($key !== "response") {
                 $NotificationDetails .= "<li><b>" . htmlspecialchars($key) . ":</b> " . nl2br(htmlspecialchars($value)) . "</li>";
@@ -209,8 +209,6 @@ trait HealthChecksServiceChecker {
                 $Pushover->setUser($globalPushoverUserKey);
             }
 
-            $Pushover->setTitle($NotificationHeader);
-
             if ($result['status'] == 'unhealthy') {
                 $Pushover->setPriority($result['priority'] ?? 0); // Set priority based on service priority
                 if ($result['priority'] == 2) {
@@ -222,8 +220,9 @@ trait HealthChecksServiceChecker {
             }
             
             $emoji = ($status === 'healthy') ? '✅' : (($status === 'unhealthy') ? '❌' : '⚠️');
-            $NotificationBody = $emoji.'&nbsp;'.$NotificationBody;
+            $NotificationHeader = $emoji.' '.$NotificationHeader;
 
+            $Pushover->setTitle($NotificationHeader);
             $Pushover->setMessage($NotificationBody);
             $Pushover->setHtml(1);
             $Pushover->setUrl(($this->config->get('System', 'websiteURL') ?? '') . '/');
