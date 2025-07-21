@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.0.5', // SemVer of plugin
+	'version' => '0.0.6', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -92,6 +92,7 @@ class healthChecksPlugin extends phpef {
 				'field' => 'status',
 				'title' => 'Status',
                 'dataAttributes' => ['sortable' => 'true'],
+				'dataAttributes' => ['sortable' => 'true', 'formatter' => 'healthStatusFormatter'],
 			],
 			[
 				'field' => 'last_checked',

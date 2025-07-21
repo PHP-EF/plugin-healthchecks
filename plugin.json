@@ -8,7 +8,7 @@
       "icon": "https://raw.githubusercontent.com/php-ef/plugin-healthchecks/main/logo.png",
       "contact": "https://github.com/php-ef/plugin-healthchecks/issues",
       "link": "https://github.com/php-ef/plugin-healthchecks",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "minimum_php-ef_version": "0.8.8",
       "release_date": "2025-07-21",
       "last_updated": "2025-07-17",
@@ -19,6 +19,13 @@
         "title": "Change Log",
         "data": [
           {
+            "version": "0.0.6",
+            "date": "2025-07-21",
+            "changes": [
+                "Add option to always show unhealthy services first in the widget",
+                "Stylise the status column in the plugin settings"
+            ]
+          },{
             "version": "0.0.5",
             "date": "2025-07-21",
             "changes": [
