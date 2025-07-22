@@ -1,41 +1,19 @@
-function clearServiceConfiguration() {
-    $("#healthChecksServiceForm").find("input, select").val("");
-}
-
-function loadServiceConfiguration(row) {
-    $("#healthChecksServiceForm").find("input[name=\"id\"]").val(row.id);
-    $("#healthChecksServiceForm").find("input[name=\"enabled\"]").prop( "checked", (row.enabled ? true : false) );
-    $("#healthChecksServiceForm").find("input[name=\"name\"]").val(row.name);
-    $("#healthChecksServiceForm").find("select[name=\"type\"]").val(row.type);
-    $("#healthChecksServiceForm").find("input[name=\"host\"]").val(row.host);
-    $("#healthChecksServiceForm").find("input[name=\"port\"]").val(row.port);
-    $("#healthChecksServiceForm").find("select[name=\"protocol\"]").val(row.protocol);
-    $("#healthChecksServiceForm").find("input[name=\"timeout\"]").val(row.timeout);
-    $("#healthChecksServiceForm").find("input[name=\"schedule\"]").val(row.schedule);
-    $("#healthChecksServiceForm").find("input[name=\"http_path\"]").val(row.http_path);
-    $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").val(row.http_expected_status);
-    $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").prop( "checked", (row.verify_ssl ? true : false) );
-    $("#healthChecksServiceForm").find("select[name=\"priority\"]").val(row.priority);
-    console.log(row.priority);
-    hideOrShowFields(row.type);
-}
-
 function hideOrShowFields(type) {
-    $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").hide();
-    $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".col-md-6").hide();
-    $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".col-md-6").hide();
-    $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".col-md-6").hide();
-    $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("input[name=\"http_path\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("input[name=\"http_expected_status\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("select[name=\"protocol\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("input[name=\"verify_ssl\"]").closest(".col-md-6").hide();
     switch(type) {
         case "web":
-            $("#healthChecksServiceForm").find("input[name=\"http_path\"]").closest(".col-md-6").show();
-            $("#healthChecksServiceForm").find("input[name=\"http_expected_status\"]").closest(".col-md-6").show();
-            $("#healthChecksServiceForm").find("select[name=\"protocol\"]").closest(".col-md-6").show();
-            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").show();
-            $("#healthChecksServiceForm").find("input[name=\"verify_ssl\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("input[name=\"http_path\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("input[name=\"http_expected_status\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("select[name=\"protocol\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("input[name=\"verify_ssl\"]").closest(".col-md-6").show();
             break;
         case "tcp":
-            $("#healthChecksServiceForm").find("input[name=\"port\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").show();
             break;
         case "icmp":
             break;
@@ -129,4 +107,47 @@ function loadHealthHistory(serviceId) {
         search: true,
         showRefresh: true
     });
+}
+
+function healthChecksServiceCallback(row = null) {
+    const modalElement = document.getElementById("SettingsModal_Health_Check");
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', () => {
+          $("#SettingsModal_Plugin").modal("show");
+          $("#HealthChecksTable").bootstrapTable('refresh');
+        });
+    }
+    if (row[0] && row[0].type) {
+        hideOrShowFields(row[0].type);
+    }
+    $(`#SettingsModalBody_Health_Check [name="type"]`).off("change").on("change", function() {hideOrShowFields($(this).val())});
+}
+
+function buildHealthCheckServiceSettingsModal(row) {
+    createSettingsModal(row, {
+        apiUrl: "/api/plugin/healthchecks/settings/services/"+row.id,
+        configUrl: "/api/plugin/healthchecks/services/"+row.id,
+        name: row.name,
+        id: row.id,
+        saveFunction: `submitSettingsModal("healthchecks/services","Health Check",false,"/api/plugin/");`,
+        labelPrefix: "Health Check",
+        dataLocation: "data",
+        noTabs: true,
+        noRows: true,
+        callback: "healthChecksServiceCallback(row)"
+    },"lg");
+}
+
+function buildNewHealthCheckServiceSettingsModal() {
+    createSettingsModal([], {
+        apiUrl: "/api/plugin/healthchecks/settings/services",
+        configUrl: null,
+        name: "New Service",
+        saveFunction: `submitSettingsModal("healthchecks/services","Health Check",true,"/api/plugin/");`,
+        labelPrefix: "Health Check",
+        dataLocation: "data",
+        noTabs: true,
+        noRows: true,
+        callback: "healthChecksServiceCallback(null)"
+    },"lg");
 }

@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.1.0', // SemVer of plugin
+	'version' => '0.1.1', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -170,30 +170,8 @@ class healthChecksPlugin extends phpef {
 							text: "Create new Service",
 							icon: "bi bi-plus-lg",
 							event: function() {
-								clearServiceConfiguration();
-								$("#SettingsModal").modal("hide");
-								$("#healthChecksServiceModal").modal("show");
-								$("#saveServiceButton").off("click").on("click", function(e) {
-									e.preventDefault();
-									var formData = $("#healthChecksServiceForm").serializeArray();
-									addCheckboxValueToFormData(formData, "#serviceEnabled", "enabled");
-									addCheckboxValueToFormData(formData, "#serviceVerifySSL", "verify_ssl");
-									var data = {};
-									$.each(formData, function(i, field) {
-										data[field.name] = field.value;
-									});
-									queryAPI("POST", "/api/plugin/healthchecks/services", data).done(function(response) {
-										if (response["result"] == "Success") {
-											toast("Success", "", "Successfully added service: " + data.name, "success");
-											$("#healthChecksServiceModal").modal("hide");
-											$("#HealthChecksTable").bootstrapTable("refresh");
-										} else {
-											toast("Error", "", "Failed to add service: " + response["message"], "danger");
-										}
-									}).fail(function() {
-										toast("Error", "", "Failed to add service", "danger");
-									});
-								});
+								$("#SettingsModal_Plugin").modal("hide");
+								buildNewHealthCheckServiceSettingsModal();
 							},
 							attributes: {
 								title: "Create new Service",
@@ -202,109 +180,6 @@ class healthChecksPlugin extends phpef {
 						}
 					}
 				}
-
-				// Create modal if healthChecksServiceModal does not exist
-				if (!document.getElementById("healthChecksServiceModal")) {
-					var modalHtml = `
-					<div class="modal fade" id="healthChecksServiceModal" tabindex="-1" aria-labelledby="healthChecksServiceModalLabel" aria-hidden="true">
-						<div class="modal-dialog modal-lg">
-							<div class="modal-content">
-								<div class="modal-header">
-									<h5 class="modal-title" id="healthChecksServiceModalLabel">Edit Service</h5>
-									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-								</div>
-								<div class="modal-body">
-									<form id="healthChecksServiceForm">
-										<input type="hidden" name="id">
-										<div class="row">
-											<div class="col-md-6 pb-2">
-												<label for="serviceName" class="form-label">Service Name</label>
-												<input type="text" class="form-control" id="serviceName" name="name" required>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceType" class="form-label">Service Type</label>
-												<select class="form-select" id="serviceType" name="type" required>
-													<option disabled>Select Service Type</option>
-													<option value="web">Web</option>
-													<option value="tcp">TCP</option>
-													<option value="icmp">ICMP</option>
-												</select>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="servicePriority" class="form-label">Priority</label>
-												<select class="form-select" id="servicePriority" name="priority" required>
-													<option disabled>Select Service Priority</option>
-													<option value="-2">Very Low</option>
-													<option value="-1">Low</option>
-													<option value="0">Normal</option>
-													<option value="1">High</option>
-													<option value="2">Critical</option>
-												</select>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceHost" class="form-label">FQDN / IP</label>
-												<input type="text" class="form-control" id="serviceHost" name="host" placeholder="app.example.com" required>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="servicePort" class="form-label">Port</label>
-												<input type="number" class="form-control" id="servicePort" name="port" placeholder="80">
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceProtocol" class="form-label">Protocol</label>
-												<select class="form-select" id="serviceProtocol" name="protocol">
-													<option disabled>Select Protocol</option>
-													<option value="http">HTTP</option>
-													<option value="https">HTTPS</option>
-												</select>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceHttpPath" class="form-label">HTTP Path</label>
-												<input type="text" class="form-control" id="serviceHttpPath" name="http_path" placeholder="/">
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceExpectedStatus" class="form-label">Expected HTTP Status</label>
-												<input type="number" class="form-control" id="serviceExpectedStatus" name="http_expected_status" placeholder="200">
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceTimeout" class="form-label">Timeout (seconds)</label>
-												<input type="number" class="form-control" id="serviceTimeout" name="timeout" placeholder="15">
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceSchedule" class="form-label">Schedule (Cron Format)</label>
-												<input type="text" class="form-control" id="serviceSchedule" name="schedule" placeholder="*/5 * * * *">
-											</div>
-										</div>
-										<hr>
-										<div class="row">
-											<div class="col-md-6 pb-2">
-												<label for="serviceEnabled" class="form-label">Enabled</label>
-												<div class="form-check form-switch">
-													<input class="form-check-input info-field" type="checkbox" name="enabled" id="serviceEnabled" data-type="checkbox" data-label="Enabled">
-												</div>
-											</div>
-											<div class="col-md-6 pb-2">
-												<label for="serviceVerifySSL" class="form-label">Verify SSL/TLS</label>
-												<div class="form-check form-switch">
-													<input class="form-check-input info-field" type="checkbox" name="verify_ssl" id="serviceVerifySSL" data-type="checkbox" data-label="Enabled">
-												</div>
-											</div>
-										</div>
-									</form>
-								</div>
-								<div class="modal-footer">
-									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
-									<button type="button" class="btn btn-primary" id="saveServiceButton">Save Service</button>
-								</div>
-							</div>
-						</div>
-					</div>`;
-					$("body").append(modalHtml);
-				}
-				$("#serviceType").off("change").on("change", function() {hideOrShowFields($(this).val())});
-				$("#healthChecksServiceModal").on("hidden.bs.modal", function () {
-					$("#SettingsModal").modal("show");
-					$("#HealthChecksTable").bootstrapTable("refresh");
-				});
 
 				function healthChecksServicesTableFormatter(value, row, index) {
 					var buttons = [
@@ -334,31 +209,8 @@ class healthChecksPlugin extends phpef {
 						}
 					},
 					"click .edit": function (e, value, row, index) {
-						var modal = new bootstrap.Modal(document.getElementById("healthChecksServiceModal"));
-						loadServiceConfiguration(row)
-						$("#saveServiceButton").off("click").on("click", function(e) {
-							e.preventDefault();
-							var formData = $("#healthChecksServiceForm").serializeArray();
-							addCheckboxValueToFormData(formData, "#serviceEnabled", "enabled");
-							addCheckboxValueToFormData(formData, "#serviceVerifySSL", "verify_ssl");
-							var data = {};
-							$.each(formData, function(i, field) {
-								data[field.name] = field.value;
-							});
-							queryAPI("PUT", "/api/plugin/healthchecks/services/"+data.id, data).done(function(response) {
-								if (response["result"] == "Success") {
-									toast("Success", "", "Successfully updated service: " + data.name, "success");
-									modal.hide();
-									$("#HealthChecksTable").bootstrapTable("refresh");
-								} else {
-									toast("Error", "", "Failed to update service: " + response["message"], "danger");
-								}
-							}).fail(function() {
-								toast("Error", "", "Failed to update service", "danger");
-							});
-						});
-						modal.show();
-						$("#SettingsModal").modal("hide");
+						$("#SettingsModal_Plugin").modal("hide");
+						buildHealthCheckServiceSettingsModal(row);
 					},
 					"click .test": function (e, value, row, index) {
 						if (row.enabled == 0) {
@@ -409,6 +261,34 @@ class healthChecksPlugin extends phpef {
 				$this->settingsOption('checkbox', 'notifyOnHealthy', ['label' => 'Notify on Healthy', 'help' => 'Send a notification when a service returns to a healthy state. (This will only be sent once)']),
 				$this->settingsOption('hr'),
 				$this->settingsOption('accordion', 'NotificationProviders', ['id' => 'NotificationProviders', 'options' => $NotificationProviders, 'label' => 'Notification Providers', 'width' => '12']),
+			)
+		);
+	}
+
+	public function _pluginGetServicesSettings($id = null) {
+		if ($id) {
+			$service = $this->getServiceById($id);
+			$image = $service['image'] ?? null;
+		} else {
+			$image = null;
+		}
+		return array(
+			'Settings' => array(
+				$this->settingsOption('input', 'name', ['label' => 'Service Name', 'help' => 'This is the name of the service you want to monitor.']),
+				$this->settingsOption('select', 'type', ['label' => 'Service Name', 'options' => [['name' => 'Web', 'value' => 'web'],['name' => 'TCP', 'value' => 'tcp'],['name' => 'ICMP', 'value' => 'icmp']], 'help' => 'This is the type of service to monitor.']),
+				$this->settingsOption('select', 'priority', ['label' => 'Priority', 'options' => [['name' => 'Very Low', 'value' => '-2'],['name' => 'Low', 'value' => '-2'],['name' => 'Normal', 'value' => '0'],['name' => 'High', 'value' => '1'],['name' => 'Critical', 'value' => '2']], 'help' => 'This is the type of service to monitor.']),
+				$this->settingsOption('input', 'host', ['label' => 'FQDN / IP', 'help' => 'The FQDN / IP of the service to monitor.']),
+				$this->settingsOption('number', 'port', ['label' => 'Port', 'help' => 'The port of the service to monitor.']),
+				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [['name' => 'HTTP', 'value' => 'http'],['name' => 'HTTPS', 'value' => 'https']], 'help' => 'This is the HTTP Protocol of monitored service.']),
+				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'The HTTP Path of the monitored service / endpoint.']),
+				$this->settingsOption('number', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'help' => 'The expected HTTP status to consider the service healthy.']),
+				$this->settingsOption('number', 'timeout', ['label' => 'Timeout (Seconds)', 'placeholder' => '5', 'help' => 'The timeout for this monitored service. It is strongly suggested to keep this <30 seconds.']),
+				$this->settingsOption('cron', 'schedule', ['label' => 'Schedule', 'placeholder' => '*/5 * * * *']),
+				$this->settingsOption('hr'),
+				$this->settingsOption('checkbox', 'enabled', ['label' => 'Enabled', 'help' => 'Enable/Disable the service health check.']),
+				$this->settingsOption('checkbox', 'verify_ssl', ['label' => 'Verify SSL/TLS', 'help' => 'Whether to verify certificates when using HTTP/S.']),
+				$this->settingsOption('hr'),
+				$this->settingsOption('imageselect', 'image', ['label' => 'Image', 'help' => 'An Image / Icon to use for the Health Check', 'value' => $image]),
 			)
 		);
 	}

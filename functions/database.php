@@ -56,7 +56,14 @@ trait HealthChecksDatabase {
                 'ALTER TABLE services ADD COLUMN priority INTEGER DEFAULT 0',
             ],
             '0.0.9' => [],
-            '0.1.0' => []
+            '0.1.0' => [],
+            '0.1.1' => [
+                'ALTER TABLE services ADD COLUMN image TEXT DEFAULT NULL',
+            ],
+            '0.1.2' => [],
+            '0.1.3' => [],
+            '0.1.4' => [],
+            '0.1.5' => []            
         ];
     }
 
@@ -210,44 +217,78 @@ trait HealthChecksDatabase {
             ':http_expected_status' => $data['http_expected_status'] ?? null,
             ':verify_ssl' => $data['verify_ssl'] ?? 0
         ]);
-        return $this->sql->lastInsertId();
+        $lastInsertId = $this->sql->lastInsertId();
+        if ($lastInsertId) {
+            $this->api->setAPIResponseMessage('Service created successfully');
+            $this->api->setAPIResponseData($this->getServiceById($lastInsertId));
+        } else {
+            $this->api->setAPIResponse('error', 'Error creating service');
+        }
+        return $lastInsertId;
     }
 
-    // Update a service in the database
-    public function updateService($id, $data) {
-        $stmt = $this->sql->prepare("UPDATE services SET name = :name, enabled = :enabled, type = :type, host = :host, port = :port, protocol = :protocol, http_path = :http_path, timeout = :timeout, schedule = :schedule, priority = :priority, http_expected_status = :http_expected_status, verify_ssl = :verify_ssl WHERE id = :id");
-        switch($data['type']) {
-            case 'icmp':
-                $data['protocol'] = 'icmp'; // Set protocol to ICMP
-                $data['port'] = ''; // Set protocol to ICMP
-                break;
-            case 'tcp':
-                $data['protocol'] = 'tcp'; // Set protocol to TCP
-                break;
-            case 'web':
-                $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
-                $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
-                $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
-                break;
-            default:
-                break;
+    public function updateService($id,$data) {
+        $set = [];
+        $params = [':id' => $id];
+
+        // Update defaults when type is changed
+        if (isset($data['type'])) {
+            switch($data['type']) {
+                case 'icmp':
+                    $data['protocol'] = 'icmp'; // Set protocol to ICMP
+                    $data['port'] = ""; // Blank port for ICMP
+                    $data['http_expected_status'] = ""; // No HTTP status for ICMP
+                    $data['http_path'] = ""; // No HTTP path for ICMP
+                    $data['verify_ssl'] = 0; // No SSL verification for ICMP
+                    break;
+                case 'tcp':
+                    $data['protocol'] = 'tcp'; // Set protocol to TCP
+                    $data['http_expected_status'] = ""; // No HTTP status for TCP
+                    $data['http_path'] = ""; // No HTTP path for TCP
+                    $data['verify_ssl'] = 0; // No SSL verification for TCP
+                    break;
+                case 'web':
+                    $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
+                    $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
+                    $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
+                    break;
+                default:
+                    break;
+            }
         }
-        $stmt->execute([
-            ':id' => $id,
-            ':enabled' => $data['enabled'] ?? 0,
-            ':name' => $data['name'],
-            ':type' => $data['type'],
-            ':host' => $data['host'],
-            ':port' => $data['port'] ?? null,
-            ':protocol' => $data['protocol'] ?? null,
-            ':http_path' => $data['http_path'] ?? null,
-            ':timeout' => $data['timeout'] ?: 5,
-            ':schedule' => $data['schedule'] ?: '*/5 * * * *',
-            ':priority' => $data['priority'] ?: 0,
-            ':http_expected_status' => $data['http_expected_status'] ?? null,
-            ':verify_ssl' => $data['verify_ssl'] ?? 0,
-        ]);
-        return $stmt->rowCount() > 0;
+
+        foreach ($data as $key => $value) {
+            if ($key !== 'id') {
+                if (is_bool($value)) {
+                    $value = $value ? true : false;
+                    $set[] = "$key = :$key";
+                    $params[":$key"] = $value;
+                } elseif (is_numeric($value)) {
+                    $set[] = "$key = :$key";
+                    $params[":$key"] = $value;
+                } elseif (isset($value)) {
+                    $set[] = "$key = :$key";
+                    $params[":$key"] = $value;
+                }
+            }
+        }
+
+        if (empty($set)) {
+            $this->api->setAPIResponseMessage('Nothing to update');
+            return false; // No fields to update
+        }
+
+        $setString = implode(', ', $set);
+        $stmt = $this->sql->prepare("UPDATE services SET $setString WHERE id = :id");
+        $stmt->execute($params);
+        if ($stmt->rowCount() > 0) {
+            $this->api->setAPIResponseMessage('Service updated successfully');
+            $this->api->setAPIResponseData($this->getServiceById($id));
+            return true;
+        } else {
+            $this->api->setAPIResponseMessage('Error updating service, no changes were made');
+            return false;
+        }
     }
 
     // Delete a service from the database
