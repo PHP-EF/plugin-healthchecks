@@ -20,11 +20,12 @@ class HealthChecksWidget implements WidgetInterface {
         ];
         $SettingsArr['Settings'] = [
             'Widget Settings' => [
-				$this->phpef->settingsOption('enable', 'enabled'),
-				$this->phpef->settingsOption('auth', 'auth', ['label' => 'Role Required']),
+				$this->phpef->settingsOption('enable', 'enabled', ['label' => 'Enable Widget']),
                 $this->phpef->settingsOption('checkbox', 'headerEnabled', ['label' => 'Enable Header', 'attr' => 'checked']),
-                $this->phpef->settingsOption('input', 'header', ['label' => 'Header Title', 'placeholder' => 'Health Checks']),
                 $this->phpef->settingsOption('checkbox', 'sortUnhealthyFirst', ['label' => 'Always show unhealthy services first', 'help' => 'Always display unhealthy services first on the widget, regardless of the default sort option.']),
+                $this->phpef->settingsOption('checkbox', 'showImages', ['label' => 'Show Service Images', 'help' => 'Display service images in the health checks widget.']),
+				$this->phpef->settingsOption('auth', 'auth', ['label' => 'Role Required']),
+                $this->phpef->settingsOption('input', 'header', ['label' => 'Header Title', 'placeholder' => 'Health Checks']),
                 $this->phpef->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $HealthChecks->buildSortMenu(), 'help' => 'Default sort field for the health checks on the dashboard.']),
                 $this->phpef->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'Default sort order for the health checks on the dashboard.']),
             ]
@@ -39,6 +40,7 @@ class HealthChecksWidget implements WidgetInterface {
         $WidgetConfig['headerEnabled'] = $WidgetConfig['headerEnabled'] ?? true;
         $WidgetConfig['header'] = $WidgetConfig['header'] ?? 'Health Checks';
         $WidgetConfig['sortUnhealthyFirst'] = $WidgetConfig['sortUnhealthyFirst'] ?? false;
+        $WidgetConfig['showImages'] = $WidgetConfig['showImages'] ?? false;
         $WidgetConfig['defaultSort'] = $WidgetConfig['defaultSort'] ?? 'status';
         $WidgetConfig['defaultSortOrder'] = $WidgetConfig['defaultSortOrder'] ?? 'asc';
         return $WidgetConfig;
@@ -62,6 +64,14 @@ class HealthChecksWidget implements WidgetInterface {
             $defaultSort = $this->widgetConfig['defaultSort'];
             $defaultSortOrder = $this->widgetConfig['defaultSortOrder'];
             $sortUnhealthyFirst = $this->widgetConfig['sortUnhealthyFirst'] ? 'true' : 'false';
+            if ($this->widgetConfig['showImages']) {
+                $healthCheckImage = <<<EOF
+                <img src="\${service.image || ''}" class="widgetTitleImage" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22lightgray%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3Cpath d=%22M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3%22/%3E%3Cline x1=%2212%22 y1=%2217%22 x2=%2212.01%22 y2=%2217%22/%3E%3C/svg%3E';">&nbsp;&nbsp;
+                EOF;
+            } else {
+                $healthCheckImage = '';
+            }
+            
             $output .= <<<EOF
                 </div>
 
@@ -113,8 +123,7 @@ class HealthChecksWidget implements WidgetInterface {
                                                     <div class="d-flex align-items-center">
                                                         <div class="my-1 w-100 d-flex">
                                                             <i class="float-right mt-2 mb-2 me-2 fa fa-check-circle h3 text-\${healthClass}"></i>
-                                                            <img src="\${service.image || ''}" class="widgetTitleImage" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22lightgray%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3Cpath d=%22M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3%22/%3E%3Cline x1=%2212%22 y1=%2217%22 x2=%2212.01%22 y2=%2217%22/%3E%3C/svg%3E';">&nbsp;&nbsp;
-                                                            
+                                                            $healthCheckImage
                                                             <h4 class="d-flex no-block align-items-center mt-2 mb-2">\${serviceName}</h4>
                                                             <div class="clearfix"></div>
                                                         </div>
