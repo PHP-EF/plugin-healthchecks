@@ -60,7 +60,11 @@ trait HealthChecksDatabase {
             '0.1.1' => [
                 'ALTER TABLE services ADD COLUMN image TEXT DEFAULT NULL',
             ],
-            '0.1.2' => [],
+            '0.1.2' => [
+                'ALTER TABLE services ADD COLUMN http_expected_status_match_type TEXT DEFAULT "any"',
+                'ALTER TABLE services ADD COLUMN http_body_match_type TEXT DEFAULT "none"',
+                'ALTER TABLE services ADD COLUMN http_body_match TEXT DEFAULT NULL'
+            ],
             '0.1.3' => [],
             '0.1.4' => [],
             '0.1.5' => []            
@@ -80,6 +84,9 @@ trait HealthChecksDatabase {
             protocol TEXT,
             http_path TEXT,
             http_expected_status INTEGER,
+            http_expected_status_match_type TEXT DEFAULT 'any',
+            http_body_match_type TEXT DEFAULT 'none',
+            http_body_match TEXT,
             verify_ssl BOOLEAN DEFAULT 0,
             schedule TEXT DEFAULT '*/5 * * * *', -- Default to every 5 minutes
             last_checked DATETIME,
@@ -89,7 +96,7 @@ trait HealthChecksDatabase {
         )");
 
         ## Create first example entries in the services table
-        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_path, schedule) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_path, :schedule)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_expected_status_match_type, http_path, schedule) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_expected_status_match_type, :http_path, :schedule)");
         $stmt->execute([
             ':name' => 'Example Service',
             ':enabled' => 0,
@@ -97,6 +104,7 @@ trait HealthChecksDatabase {
             ':host' => 'example.com',
             ':port' => 80,
             ':protocol' => 'http',
+            ':http_expected_status_match_type' => 'exact',
             ':http_expected_status' => 200,
             ':http_path' => '/',
             ':schedule' => '*/5 * * * *'
@@ -109,6 +117,7 @@ trait HealthChecksDatabase {
             ':port' => 80,
             ':protocol' => 'tcp',
             ':http_expected_status' => null,
+            ':http_expected_status_match_type' => null,
             ':http_path' => null,
             ':schedule' => '*/5 * * * *'
         ]);
@@ -120,6 +129,7 @@ trait HealthChecksDatabase {
             ':port' => null,
             ':protocol' => 'icmp',
             ':http_expected_status' => null,
+            ':http_expected_status_match_type' => null,
             ':http_path' => null,
             ':schedule' => '*/5 * * * *'
         ]);
@@ -187,7 +197,7 @@ trait HealthChecksDatabase {
 
     // Create a new service in the database
     public function createService($data) {
-        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_path, timeout, schedule, priority, http_expected_status, verify_ssl) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_path, :timeout, :schedule, :priority, :http_expected_status, :verify_ssl)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_path, timeout, schedule, priority, http_expected_status, http_expected_status_match_type, http_body_match, http_body_match_type, verify_ssl) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_path, :timeout, :schedule, :priority, :http_expected_status, :http_expected_status_match_type, :http_body_match, :http_body_match_type, :verify_ssl)");
         switch($data['type']) {
             case 'icmp':
                 $data['protocol'] = 'icmp'; // Set protocol to ICMP
@@ -198,7 +208,12 @@ trait HealthChecksDatabase {
             case 'web':
                 $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
                 $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
-                $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
+                if ($data['http_expected_status_match_type'] === 'exact') {
+                    $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
+                } elseif ($data['http_expected_status_match_type'] === 'any') {
+                    $data['http_expected_status'] = 0; // Any status means no specific expectation
+                }
+                $data['verify_ssl'] = $data['verify_ssl'] ?? 0; // Default to not verifying SSL
                 break;
             default:
                 break;
@@ -215,6 +230,9 @@ trait HealthChecksDatabase {
             ':schedule' => $data['schedule'] ?: '*/5 * * * *',
             ':priority' => $data['priority'] ?: 0,
             ':http_expected_status' => $data['http_expected_status'] ?? null,
+            ':http_expected_status_match_type' => $data['http_expected_status_match_type'] ?? 'any',
+            ':http_body_match' => $data['http_body_match'] ?? null,
+            ':http_body_match_type' => $data['http_body_match_type'] ?? 'none',
             ':verify_ssl' => $data['verify_ssl'] ?? 0
         ]);
         $lastInsertId = $this->sql->lastInsertId();
@@ -236,21 +254,18 @@ trait HealthChecksDatabase {
             switch($data['type']) {
                 case 'icmp':
                     $data['protocol'] = 'icmp'; // Set protocol to ICMP
-                    $data['port'] = ""; // Blank port for ICMP
-                    $data['http_expected_status'] = ""; // No HTTP status for ICMP
-                    $data['http_path'] = ""; // No HTTP path for ICMP
-                    $data['verify_ssl'] = 0; // No SSL verification for ICMP
                     break;
                 case 'tcp':
                     $data['protocol'] = 'tcp'; // Set protocol to TCP
-                    $data['http_expected_status'] = ""; // No HTTP status for TCP
-                    $data['http_path'] = ""; // No HTTP path for TCP
-                    $data['verify_ssl'] = 0; // No SSL verification for TCP
                     break;
                 case 'web':
                     $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
                     $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
                     $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
+                    $data['verify_ssl'] = $data['verify_ssl'] ?? 0; // Default to not verifying SSL
+                    $data['http_expected_status_match_type'] = $data['http_expected_status_match_type'] ?? 'any'; // Default to exact match
+                    $data['http_body_match'] = $data['http_body_match'] ?? null; // Default to no body match
+                    $data['http_body_match_type'] = $data['http_body_match_type'] ?? 'none'; // Default to no body match type
                     break;
                 default:
                     break;

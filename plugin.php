@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.1.1', // SemVer of plugin
+	'version' => '0.1.2', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -275,20 +275,33 @@ class healthChecksPlugin extends phpef {
 		return array(
 			'Settings' => array(
 				$this->settingsOption('input', 'name', ['label' => 'Service Name', 'help' => 'This is the name of the service you want to monitor.']),
-				$this->settingsOption('select', 'type', ['label' => 'Service Name', 'options' => [['name' => 'Web', 'value' => 'web'],['name' => 'TCP', 'value' => 'tcp'],['name' => 'ICMP', 'value' => 'icmp']], 'help' => 'This is the type of service to monitor.']),
+				$this->settingsOption('select', 'type', ['label' => 'Service Type', 'options' => [['name' => 'Web', 'value' => 'web'],['name' => 'TCP', 'value' => 'tcp'],['name' => 'ICMP', 'value' => 'icmp']], 'help' => 'This is the type of service to monitor.']),
 				$this->settingsOption('select', 'priority', ['label' => 'Priority', 'options' => [['name' => 'Very Low', 'value' => '-2'],['name' => 'Low', 'value' => '-2'],['name' => 'Normal', 'value' => '0'],['name' => 'High', 'value' => '1'],['name' => 'Critical', 'value' => '2']], 'help' => 'This is the type of service to monitor.']),
 				$this->settingsOption('input', 'host', ['label' => 'FQDN / IP', 'help' => 'The FQDN / IP of the service to monitor.']),
 				$this->settingsOption('number', 'port', ['label' => 'Port', 'help' => 'The port of the service to monitor.']),
-				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [['name' => 'HTTP', 'value' => 'http'],['name' => 'HTTPS', 'value' => 'https']], 'help' => 'This is the HTTP Protocol of monitored service.']),
-				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'The HTTP Path of the monitored service / endpoint.']),
-				$this->settingsOption('number', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'help' => 'The expected HTTP status to consider the service healthy.']),
 				$this->settingsOption('number', 'timeout', ['label' => 'Timeout (Seconds)', 'placeholder' => '5', 'help' => 'The timeout for this monitored service. It is strongly suggested to keep this <30 seconds.']),
 				$this->settingsOption('cron', 'schedule', ['label' => 'Schedule', 'placeholder' => '*/5 * * * *']),
-				$this->settingsOption('hr'),
-				$this->settingsOption('checkbox', 'enabled', ['label' => 'Enabled', 'help' => 'Enable/Disable the service health check.']),
+				$this->settingsOption('hr', 'httpSettingsBreak', ['id' => 'httpSettingsBreak']),
+				$this->settingsOption('title', 'httpSettings', ['text' => 'HTTP Settings', 'id' => 'httpSettingsTitle']),
+				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'The HTTP Path of the monitored service / endpoint.']),
+				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [['name' => 'HTTP', 'value' => 'http'],['name' => 'HTTPS', 'value' => 'https']], 'help' => 'This is the HTTP Protocol of monitored service.']),
+				$this->settingsOption('select', 'http_expected_status_match_type', [
+					'label' => 'Expected HTTP Status Match Type',
+					'options' => [
+						['name' => 'Any Status', 'value' => 'any'],
+						['name' => 'Exact Match', 'value' => 'exact']
+						// ['name' => 'Range Match', 'value' => 'range'],
+					],
+					'help' => 'How to match the HTTP status code. <br><b>Exact Match:</b> The status code must match exactly.<b>Any Status:</b> Any status code is considered healthy.'
+					//<br><b>Range Match:</b> The status code must be within a specified range.<br>
+				]),
+				$this->settingsOption('number', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'help' => 'The expected HTTP status to consider the service healthy.']),
+				$this->settingsOption('select', 'http_body_match_type', ['label' => 'Body Match Type', 'options' => [['name' => 'None', 'value' => 'none'], ['name' => 'Word', 'value' => 'word'], ['name' => 'Regex', 'value' => 'regex']], 'help' => 'The type of match to use for the HTTP Body. <br><b>None:</b> Ignore response body.<br><b>Word:</b> The body must contain the word.<br><b>Regex:</b> The body must match the regex.']),
+				$this->settingsOption('input', 'http_body_match', ['label' => 'HTTP Body Match', 'placeholder' => '', 'help' => 'The word or regex to match in the HTTP response body. This is only used if the Body Match Type is set to Word or Regex.']),
 				$this->settingsOption('checkbox', 'verify_ssl', ['label' => 'Verify SSL/TLS', 'help' => 'Whether to verify certificates when using HTTP/S.']),
 				$this->settingsOption('hr'),
-				$this->settingsOption('imageselect', 'image', ['label' => 'Image', 'help' => 'An Image / Icon to use for the Health Check', 'value' => $image]),
+				$this->settingsOption('checkbox', 'enabled', ['label' => 'Enable Health Check', 'help' => 'Enable/Disable the service health check.']),
+				$this->settingsOption('imageselect', 'image', ['label' => 'Image', 'help' => 'An Image / Icon to use for the Health Check', 'value' => $image])
 			)
 		);
 	}

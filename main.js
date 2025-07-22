@@ -1,16 +1,31 @@
-function hideOrShowFields(type) {
+function hideOrShowFields() {
+    const type = $("#SettingsModalBody_Health_Check").find("select[name=\"type\"]").val();
+    const http_expected_status_match_type = $("#SettingsModalBody_Health_Check").find("select[name=\"http_expected_status_match_type\"] :selected").val();
+    const http_body_match_type = $("#SettingsModalBody_Health_Check").find("select[name=\"http_body_match_type\"] :selected").val();
     $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").hide();
     $("#SettingsModalBody_Health_Check").find("input[name=\"http_path\"]").closest(".col-md-6").hide();
     $("#SettingsModalBody_Health_Check").find("input[name=\"http_expected_status\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("select[name=\"http_expected_status_match_type\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("input[name=\"http_body_match\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check").find("select[name=\"http_body_match_type\"]").closest(".col-md-6").hide();
     $("#SettingsModalBody_Health_Check").find("select[name=\"protocol\"]").closest(".col-md-6").hide();
     $("#SettingsModalBody_Health_Check").find("input[name=\"verify_ssl\"]").closest(".col-md-6").hide();
+    $("#SettingsModalBody_Health_Check #httpSettingsTitle, #SettingsModalBody_Health_Check #httpSettingsBreak").hide();
     switch(type) {
         case "web":
             $("#SettingsModalBody_Health_Check").find("input[name=\"http_path\"]").closest(".col-md-6").show();
-            $("#SettingsModalBody_Health_Check").find("input[name=\"http_expected_status\"]").closest(".col-md-6").show();
             $("#SettingsModalBody_Health_Check").find("select[name=\"protocol\"]").closest(".col-md-6").show();
             $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").show();
             $("#SettingsModalBody_Health_Check").find("input[name=\"verify_ssl\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("select[name=\"http_body_match_type\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check").find("select[name=\"http_expected_status_match_type\"]").closest(".col-md-6").show();
+            $("#SettingsModalBody_Health_Check #httpSettingsTitle, #SettingsModalBody_Health_Check #httpSettingsBreak").show();
+            if (http_expected_status_match_type === "exact") {
+                $("#SettingsModalBody_Health_Check").find("input[name=\"http_expected_status\"]").closest(".col-md-6").show();
+            }
+            if (http_body_match_type === "word" || http_body_match_type === "regex") {
+                $("#SettingsModalBody_Health_Check").find("input[name=\"http_body_match\"]").closest(".col-md-6").show();
+            }
             break;
         case "tcp":
             $("#SettingsModalBody_Health_Check").find("input[name=\"port\"]").closest(".col-md-6").show();
@@ -117,10 +132,8 @@ function healthChecksServiceCallback(row = null) {
           $("#HealthChecksTable").bootstrapTable('refresh');
         });
     }
-    if (row[0] && row[0].type) {
-        hideOrShowFields(row[0].type);
-    }
-    $(`#SettingsModalBody_Health_Check [name="type"]`).off("change").on("change", function() {hideOrShowFields($(this).val())});
+    hideOrShowFields();
+    $(`#SettingsModalBody_Health_Check [name="type"], #SettingsModalBody_Health_Check [name="http_body_match_type"], #SettingsModalBody_Health_Check [name="http_expected_status_match_type"]`).off("change").on("change", function() {hideOrShowFields();});
 }
 
 function buildHealthCheckServiceSettingsModal(row) {
