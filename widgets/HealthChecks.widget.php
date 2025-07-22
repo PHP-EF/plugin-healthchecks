@@ -111,15 +111,15 @@ class HealthChecksWidget implements WidgetInterface {
                                             <div class="card-body pt-1 pb-1">
                                                 <div class="d-flex no-block align-items-center justify-content-between">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="left-health bg-info"></div>
-                                                        <div class="ms-1 w-100 d-flex">
+                                                        <div class="my-1 w-100 d-flex">
                                                             <i class="float-right mt-2 mb-2 me-2 fa fa-check-circle h3 text-\${healthClass}"></i>
+                                                            <img src="\${service.image || ''}" class="widgetTitleImage" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22lightgray%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3Cpath d=%22M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3%22/%3E%3Cline x1=%2212%22 y1=%2217%22 x2=%2212.01%22 y2=%2217%22/%3E%3C/svg%3E';">&nbsp;&nbsp;
+                                                            
                                                             <h4 class="d-flex no-block align-items-center mt-2 mb-2">\${serviceName}</h4>
                                                             <div class="clearfix"></div>
                                                         </div>
                                                     </div>
-                                                    <!-- <span class="badge text-bg-\${healthClass} float-end">Last checked: \${serviceLastChecked}</span> -->
-                                                    <small class="text-muted me-2">
+                                                    <small class="text-muted ms-2">
                                                         Last checked: \${serviceLastChecked}
                                                     </small>
                                                 </div>

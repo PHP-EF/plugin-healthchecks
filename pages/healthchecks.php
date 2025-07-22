@@ -107,7 +107,7 @@
                   <div class="accordion-item">
                       <div class="accordion-header" id="heading\${service.id}">
                           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse\${service.id}" aria-expanded="true" aria-controls="collapse\${service.id}">
-                              \${serviceName} &nbsp;&nbsp; \${healthStatusFormatter(serviceStatus)}
+                              <img src="\${service.image || ''}" class="widgetTitleImage" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22lightgray%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3Cpath d=%22M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3%22/%3E%3Cline x1=%2212%22 y1=%2217%22 x2=%2212.01%22 y2=%2217%22/%3E%3C/svg%3E';" class="widgetTitleImage"> &nbsp;&nbsp; <h3 class="m-0">\${serviceName}</h3> &nbsp;&nbsp; \${healthStatusFormatter(serviceStatus)}
                               <small class="text-muted ms-2">
                                   <strong>Last Checked:</strong> \${serviceLastChecked}
                               </small>

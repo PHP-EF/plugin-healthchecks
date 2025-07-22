@@ -8,8 +8,8 @@
       "icon": "https://raw.githubusercontent.com/php-ef/plugin-healthchecks/main/logo.png",
       "contact": "https://github.com/php-ef/plugin-healthchecks/issues",
       "link": "https://github.com/php-ef/plugin-healthchecks",
-      "version": "0.0.9",
-      "minimum_php-ef_version": "0.8.8",
+      "version": "0.1.1",
+      "minimum_php-ef_version": "0.9.0",
       "release_date": "2025-07-21",
       "last_updated": "2025-07-17",
       "github_folder": "",
@@ -19,6 +19,19 @@
         "title": "Change Log",
         "data": [
           {
+            "version": "0.1.1",
+            "date": "2025-07-22",
+            "changes": [
+                "Add image column to services table",
+                "Add image option to health check service settings"
+            ]
+          },{
+            "version": "0.1.0",
+            "date": "2025-07-21",
+            "changes": [
+                "Populate URL automatically if Website URL and Health Checks page are both configured"
+            ]
+          },{
             "version": "0.0.9",
             "date": "2025-07-21",
             "changes": [
