@@ -28,6 +28,7 @@ class HealthChecksWidget implements WidgetInterface {
                 $this->phpef->settingsOption('input', 'header', ['label' => 'Header Title', 'placeholder' => 'Health Checks']),
                 $this->phpef->settingsOption('select', 'defaultSort', ['label' => 'Default Sort Field', 'options' => $HealthChecks->buildSortMenu(), 'help' => 'Default sort field for the health checks on the dashboard.']),
                 $this->phpef->settingsOption('select', 'defaultSortOrder', ['label' => 'Default Sort Order', 'options' => [['name' => 'Descending', 'value' => 'desc'],['name' => 'Ascending', 'value' => 'asc']], 'help' => 'Default sort order for the health checks on the dashboard.']),
+                $this->phpef->settingsOption('input', 'refreshInterval', ['label' => 'Refresh Interval (seconds)', 'placeholder' => '60', 'help' => 'Interval in seconds to refresh the health checks widget.']),
             ]
         ];
         return $SettingsArr;
@@ -43,6 +44,7 @@ class HealthChecksWidget implements WidgetInterface {
         $WidgetConfig['showImages'] = $WidgetConfig['showImages'] ?? false;
         $WidgetConfig['defaultSort'] = $WidgetConfig['defaultSort'] ?? 'status';
         $WidgetConfig['defaultSortOrder'] = $WidgetConfig['defaultSortOrder'] ?? 'asc';
+        $WidgetConfig['refreshInterval'] = $WidgetConfig['refreshInterval'] ?? 60;
         return $WidgetConfig;
     }
 
@@ -71,6 +73,8 @@ class HealthChecksWidget implements WidgetInterface {
             } else {
                 $healthCheckImage = '';
             }
+
+            $refreshInterval = $this->widgetConfig['refreshInterval'] * 1000; // Convert to milliseconds
             
             $output .= <<<EOF
                 </div>
@@ -148,7 +152,7 @@ class HealthChecksWidget implements WidgetInterface {
                     try {
                         while (true) {
                             loadHealthData();
-                            await delay(30000);
+                            await delay($refreshInterval);
                         }
                     } catch (err) {
                         console.log(err);

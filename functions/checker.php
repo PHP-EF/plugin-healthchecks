@@ -59,13 +59,28 @@ trait HealthChecksServiceChecker {
         curl_close($ch);
 
         $status = 'healthy';
+        // Check for CURL errors, if none, check HTTP status code
         if ($error) {
             $status = 'unhealthy';
             $error = "CURL Error: $error";
-        } elseif ($httpCode != $service['http_expected_status']) {
-            $status = 'unhealthy';
-            $error = "Expected HTTP status {$service['http_expected_status']}, got $httpCode";
-        }        
+        } elseif (isset($service['http_expected_status_match_type']) && $service['http_expected_status_match_type'] == 'exact') {
+            if ($httpCode != $service['http_expected_status']) {
+                $status = 'unhealthy';
+                $error = "Expected HTTP status {$service['http_expected_status']}, got $httpCode";
+            }
+        }
+
+        // Check HTTP body match if applicable
+        if (isset($service['http_body_match']) && !empty($service['http_body_match'])) {
+            $matchType = $service['http_body_match_type'] ?? 'none';
+            if ($matchType == 'word' && strpos($response, $service['http_body_match']) === false) {
+                $status = 'unhealthy';
+                $error = "HTTP body does not match expected content";
+            } elseif ($matchType == 'regex' && !preg_match("/{$service['http_body_match']}/", $response)) {
+                $status = 'unhealthy';
+                $error = "HTTP body does not match regex pattern: {$service['http_body_match']}";
+            }
+        }
 
         $Result = [
             'id' => $service['id'],
