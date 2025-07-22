@@ -119,8 +119,7 @@ class HealthChecksWidget implements WidgetInterface {
                                                             <div class="clearfix"></div>
                                                         </div>
                                                     </div>
-                                                    <!-- <span class="badge text-bg-\${healthClass} float-end">Last checked: \${serviceLastChecked}</span> -->
-                                                    <small class="text-muted me-2">
+                                                    <small class="text-muted ms-2">
                                                         Last checked: \${serviceLastChecked}
                                                     </small>
                                                 </div>
