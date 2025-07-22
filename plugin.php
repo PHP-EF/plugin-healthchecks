@@ -9,7 +9,7 @@ $GLOBALS['plugins']['Health Checks'] = [ // Plugin Name
 	'author' => 'TehMuffinMoo', // Who wrote the plugin
 	'category' => 'Monitoring', // One to Two Word Description
 	'link' => 'https://github.com/php-ef/plugin-healthchecks', // Link to plugin info
-	'version' => '0.1.2', // SemVer of plugin
+	'version' => '0.1.3', // SemVer of plugin
 	'image' => 'logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'api' => '/api/plugin/healthchecks/settings', // api route for settings page, or null if no settings page
@@ -89,6 +89,11 @@ class healthChecksPlugin extends phpef {
                 'dataAttributes' => ['sortable' => 'true'],
 			],
 			[
+				'field' => 'http_method',
+				'title' => 'Method',
+                'dataAttributes' => ['sortable' => 'true', 'visible' => 'false'],
+			],
+			[
 				'field' => 'status',
 				'title' => 'Status',
                 'dataAttributes' => ['sortable' => 'true'],
@@ -113,6 +118,26 @@ class healthChecksPlugin extends phpef {
 				'field' => 'enabled',
 				'title' => 'Enabled',
                 'dataAttributes' => ['sortable' => 'true', 'formatter' => 'booleanTickCrossFormatter'],
+			],
+			[
+				'field' => 'http_expected_status_match_type',
+				'title' => 'Status Match Type',
+				'dataAttributes' => ['visible' => 'false'],
+			],
+			[
+				'field' => 'http_expected_status',
+				'title' => 'Expected Status',
+				'dataAttributes' => ['visible' => 'false'],
+			],
+			[
+				'field' => 'http_body_match_type',
+				'title' => 'Body Match Type',
+				'dataAttributes' => ['visible' => 'false'],
+			],
+			[
+				'field' => 'http_body_match',
+				'title' => 'Body Match',
+				'dataAttributes' => ['visible' => 'false'],
 			],
 			[
 				'title' => 'Actions',
@@ -285,16 +310,10 @@ class healthChecksPlugin extends phpef {
 				$this->settingsOption('title', 'httpSettings', ['text' => 'HTTP Settings', 'id' => 'httpSettingsTitle']),
 				$this->settingsOption('input', 'http_path', ['label' => 'HTTP Path', 'placeholder' => '/', 'help' => 'The HTTP Path of the monitored service / endpoint.']),
 				$this->settingsOption('select', 'protocol', ['label' => 'Protocol', 'options' => [['name' => 'HTTP', 'value' => 'http'],['name' => 'HTTPS', 'value' => 'https']], 'help' => 'This is the HTTP Protocol of monitored service.']),
-				$this->settingsOption('select', 'http_expected_status_match_type', [
-					'label' => 'Expected HTTP Status Match Type',
-					'options' => [
-						['name' => 'Any Status', 'value' => 'any'],
-						['name' => 'Exact Match', 'value' => 'exact']
-						// ['name' => 'Range Match', 'value' => 'range'],
-					],
-					'help' => 'How to match the HTTP status code. <br><b>Exact Match:</b> The status code must match exactly.<b>Any Status:</b> Any status code is considered healthy.'
-					//<br><b>Range Match:</b> The status code must be within a specified range.<br>
-				]),
+				$this->settingsOption('select', 'http_method', ['label' => 'HTTP Method', 'options' => [['name' => 'GET', 'value' => 'get'],['name' => 'POST', 'value' => 'post'],['name' => 'PUT', 'value' => 'put'],['name' => 'DELETE', 'value' => 'delete'],['name' => 'PATCH', 'value' => 'patch'], ['name' => 'HEAD', 'value' => 'head'],['name' => 'OPTIONS', 'value' => 'options'],['name' => 'TRACE', 'value' => 'trace']], 'help' => 'The HTTP Method to use for the request.']),
+				$this->settingsOption('select', 'http_expected_status_match_type', ['label' => 'Expected HTTP Status Match Type','options' => [['name' => 'Any Status', 'value' => 'any'],['name' => 'Exact Match', 'value' => 'exact']],'help' => 'How to match the HTTP status code. <br><b>Exact Match:</b> The status code must match exactly.<b>Any Status:</b> Any status code is considered healthy.']),
+				// ['name' => 'Range Match', 'value' => 'range'],
+				//<br><b>Range Match:</b> The status code must be within a specified range.<br>
 				$this->settingsOption('number', 'http_expected_status', ['label' => 'Expected HTTP Status', 'placeholder' => '200', 'help' => 'The expected HTTP status to consider the service healthy.']),
 				$this->settingsOption('select', 'http_body_match_type', ['label' => 'Body Match Type', 'options' => [['name' => 'None', 'value' => 'none'], ['name' => 'Word', 'value' => 'word'], ['name' => 'Regex', 'value' => 'regex']], 'help' => 'The type of match to use for the HTTP Body. <br><b>None:</b> Ignore response body.<br><b>Word:</b> The body must contain the word.<br><b>Regex:</b> The body must match the regex.']),
 				$this->settingsOption('input', 'http_body_match', ['label' => 'HTTP Body Match', 'placeholder' => '', 'help' => 'The word or regex to match in the HTTP response body. This is only used if the Body Match Type is set to Word or Regex.']),

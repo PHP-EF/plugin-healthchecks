@@ -50,6 +50,39 @@ trait HealthChecksServiceChecker {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         }
 
+        // Set HTTP method if specified
+        switch(strtolower($service['http_method'] ?? 'get')) {
+            case 'post':
+                curl_setopt($ch, CURLOPT_POST, true);
+                break;
+            case 'put':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                break;
+            case 'delete':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                break;
+            case 'patch':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+                break;
+            case 'head':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD');
+                break;
+            case 'options':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'OPTIONS');
+                break;
+            case 'get':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                break;
+            case 'trace':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'TRACE');
+                break;
+            case 'connect':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'CONNECT');
+                break;
+            default:
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // Default to GET if no method specified
+        }
+
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
@@ -91,7 +124,10 @@ trait HealthChecksServiceChecker {
             'timeout' => $service['timeout'] ?: 5,
             'priority' => $service['priority'],
             'status' => $status,
+            'http_expected_status_match_type' => $service['http_expected_status_match_type'],
             'http_expected_status' => $service['http_expected_status'],
+            'http_body_match_type' => $service['http_body_match_type'],
+            'http_body_match' => $service['http_body_match'],
             'http_code' => $httpCode,
             'path' => $service['http_path'] ?? '/',
             'protocol' => $service['protocol'] ?: 'http',

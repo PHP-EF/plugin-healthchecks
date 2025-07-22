@@ -19,6 +19,12 @@
         "title": "Change Log",
         "data": [
           {
+            "version": "0.1.3",
+            "date": "2025-07-22",
+            "changes": [
+                "Add HTTP Method option to services"
+            ]
+          },{
             "version": "0.1.2",
             "date": "2025-07-22",
             "changes": [
