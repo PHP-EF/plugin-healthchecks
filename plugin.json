@@ -8,7 +8,7 @@
       "icon": "https://raw.githubusercontent.com/php-ef/plugin-healthchecks/main/logo.png",
       "contact": "https://github.com/php-ef/plugin-healthchecks/issues",
       "link": "https://github.com/php-ef/plugin-healthchecks",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "minimum_php-ef_version": "0.9.0",
       "release_date": "2025-07-21",
       "last_updated": "2025-07-17",
