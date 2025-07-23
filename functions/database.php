@@ -65,7 +65,9 @@ trait HealthChecksDatabase {
                 'ALTER TABLE services ADD COLUMN http_body_match_type TEXT DEFAULT "none"',
                 'ALTER TABLE services ADD COLUMN http_body_match TEXT DEFAULT NULL'
             ],
-            '0.1.3' => [],
+            '0.1.3' => [
+                'ALTER TABLE services ADD COLUMN http_method TEXT DEFAULT "get"',
+            ],
             '0.1.4' => [],
             '0.1.5' => []            
         ];
@@ -83,6 +85,7 @@ trait HealthChecksDatabase {
             timeout INTEGER DEFAULT 15,
             protocol TEXT,
             http_path TEXT,
+            http_method TEXT DEFAULT 'get',
             http_expected_status INTEGER,
             http_expected_status_match_type TEXT DEFAULT 'any',
             http_body_match_type TEXT DEFAULT 'none',
@@ -96,7 +99,7 @@ trait HealthChecksDatabase {
         )");
 
         ## Create first example entries in the services table
-        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_expected_status_match_type, http_path, schedule) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_expected_status_match_type, :http_path, :schedule)");
+        $stmt = $this->sql->prepare("INSERT INTO services (name, enabled, type, host, port, protocol, http_expected_status, http_expected_status_match_type, http_path, http_method, schedule) VALUES (:name, :enabled, :type, :host, :port, :protocol, :http_expected_status, :http_expected_status_match_type, :http_path, :http_method, :schedule)");
         $stmt->execute([
             ':name' => 'Example Service',
             ':enabled' => 0,
@@ -107,6 +110,7 @@ trait HealthChecksDatabase {
             ':http_expected_status_match_type' => 'exact',
             ':http_expected_status' => 200,
             ':http_path' => '/',
+            ':http_method' => 'get',
             ':schedule' => '*/5 * * * *'
         ]);
         $stmt->execute([
@@ -208,6 +212,7 @@ trait HealthChecksDatabase {
             case 'web':
                 $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
                 $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
+                $data['http_method'] = $data['http_method'] ?? 'get'; // Default to GET if not specified
                 if ($data['http_expected_status_match_type'] === 'exact') {
                     $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
                 } elseif ($data['http_expected_status_match_type'] === 'any') {
@@ -226,6 +231,7 @@ trait HealthChecksDatabase {
             ':port' => $data['port'] ?? null,
             ':protocol' => $data['protocol'] ?? null,
             ':http_path' => $data['http_path'] ?? null,
+            ':http_method' => $data['http_method'] ?? 'get',
             ':timeout' => $data['timeout'] ?: 5,
             ':schedule' => $data['schedule'] ?: '*/5 * * * *',
             ':priority' => $data['priority'] ?: 0,
@@ -261,6 +267,7 @@ trait HealthChecksDatabase {
                 case 'web':
                     $data['protocol'] = $data['protocol'] ?? 'http'; // Default to HTTP if not specified
                     $data['http_path'] = $data['http_path'] ?? '/'; // Default to root path if not specified
+                    $data['http_method'] = $data['http_method'] ?? 'get'; // Default to GET if not specified
                     $data['http_expected_status'] = $data['http_expected_status'] ?? 200; // Default expected status to 200 if not specified
                     $data['verify_ssl'] = $data['verify_ssl'] ?? 0; // Default to not verifying SSL
                     $data['http_expected_status_match_type'] = $data['http_expected_status_match_type'] ?? 'any'; // Default to exact match
